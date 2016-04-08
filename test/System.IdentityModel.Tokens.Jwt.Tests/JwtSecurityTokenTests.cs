@@ -26,19 +26,19 @@
 //------------------------------------------------------------------------------
 
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Tests;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens.Tests;
 using Xunit;
 
 namespace System.IdentityModel.Tokens.Jwt.Tests
 {
     public class JwtSecurityTokenTests
     {
-        [Fact( DisplayName = "JwtSecurityTokenTests: Defaults")]
+        [Fact]
         public void Defaults()
         {
             JwtSecurityToken jwt = new JwtSecurityToken();
-
             List<Claim> claims = jwt.Claims as List<Claim>;
             Assert.NotNull(claims);
 
@@ -71,7 +71,7 @@ namespace System.IdentityModel.Tokens.Jwt.Tests
             Assert.NotNull(jwt.EncodedPayload);
         }
 
-        [Fact( DisplayName = "JwtSecurityTokenTests: Constructor using encoded string.")]
+        [Fact]
         public void EncodedStringConstruction()
         {
             Console.WriteLine("Entering: JwtSecurityToken_EncodedStringConstruction");

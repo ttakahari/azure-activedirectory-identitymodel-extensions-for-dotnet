@@ -25,10 +25,11 @@
 //
 //------------------------------------------------------------------------------
 
-using Microsoft.IdentityModel.Logging;
-using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using Microsoft.IdentityModel.Logging;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.IdentityModel.Protocols.OpenIdConnect
 {
@@ -40,13 +41,25 @@ namespace Microsoft.IdentityModel.Protocols.OpenIdConnect
         /// <summary>
         /// Initializes a new instance of the <see cref="OpenIdConnectMessage"/> class.
         /// </summary>
-        public OpenIdConnectMessage() : this(string.Empty) {}
+        public OpenIdConnectMessage() { }
 
         /// <summary>
-        /// Initializes an instance of <see cref="OpenIdConnectMessage"/> class with a specific issuerAddress.
+        /// Initializes an instance of <see cref="OpenIdConnectMessage"/> class with a json string.
         /// </summary>
-        public OpenIdConnectMessage(string issuerAddress) : base(issuerAddress) 
+        public OpenIdConnectMessage(string json)
         {
+            if (string.IsNullOrEmpty(json))
+                throw LogHelper.LogArgumentNullException("json");
+
+            try
+            {
+                SetJsonParameters(JObject.Parse(json));
+            }
+            catch
+            {
+                throw LogHelper.LogException<ArgumentException>(LogMessages.IDX10106, json);
+            }
+
         }
 
         /// <summary>
@@ -118,6 +131,11 @@ namespace Microsoft.IdentityModel.Protocols.OpenIdConnect
         /// </summary>
         /// <param name="json">the json object from which the instance is created.</param>
         public OpenIdConnectMessage(JObject json)
+        {
+            SetJsonParameters(json);
+        }
+
+        private void SetJsonParameters(JObject json)
         {
             if (json == null)
                 throw LogHelper.LogArgumentNullException("json");

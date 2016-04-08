@@ -27,6 +27,7 @@
 
 using System.Collections.Generic;
 using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
 using Xunit;
 
 namespace System.IdentityModel.Tokens.Jwt.Tests
@@ -36,6 +37,8 @@ namespace System.IdentityModel.Tokens.Jwt.Tests
     /// </summary>
     public class DerivedJwtSecurityToken : JwtSecurityToken
     {
+        // TODO - need to add tests for delegates.
+
         public DerivedJwtSecurityToken(string encodedJwt)
             : base(encodedJwt)
         {
@@ -49,10 +52,15 @@ namespace System.IdentityModel.Tokens.Jwt.Tests
         }
 
         public bool ValidateAudienceCalled { get; set; }
+
         public bool ValidateLifetimeCalled { get; set; }
+
         public bool ValidateIssuerCalled { get; set; }
+
         public bool ValidateSignatureCalled { get; set; }
+
         public bool ValidateSigningKeyCalled { get; set; }
+
         public string Guid { get; set; }
 
         private void Init()
@@ -82,10 +90,15 @@ namespace System.IdentityModel.Tokens.Jwt.Tests
         }
 
         public bool ReadTokenCalled { get; set; }
+
         public bool ValidateAudienceCalled { get; set; }
+
         public bool ValidateLifetimeCalled { get; set; }
+
         public bool ValidateIssuerCalled { get; set; }
+
         public bool ValidateIssuerSigningKeyCalled { get; set; }
+
         public bool ValidateSignatureCalled { get; set; }
 
         public JwtSecurityToken Jwt { get; set; }
@@ -165,5 +178,4 @@ namespace System.IdentityModel.Tokens.Jwt.Tests
             base.ValidateIssuerSecurityKey(securityKey, jwt, validationParameters);
         }
     }
-
 }

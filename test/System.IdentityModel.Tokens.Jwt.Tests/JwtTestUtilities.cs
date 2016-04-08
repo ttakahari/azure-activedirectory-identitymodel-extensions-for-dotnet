@@ -26,9 +26,9 @@
 //------------------------------------------------------------------------------
 
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Tests;
 using System.Security.Claims;
-using System.Xml;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens.Tests;
 
 namespace System.IdentityModel.Tokens.Jwt.Tests
 {
@@ -40,39 +40,32 @@ namespace System.IdentityModel.Tokens.Jwt.Tests
     /// </summary>
     public class JwtSecurityTokenTestVariation
     {
-        // it is helpful to have these as a defaults
-        DateTime _notbefore;
-        DateTime _expires;        
-        JwtSecurityTokenHandler _jwtHandler;
-        ExpectedException _expectedException;
-
         public JwtSecurityTokenTestVariation() 
         {
-            _notbefore = DateTime.UtcNow;
-            _expires = DateTime.UtcNow + TimeSpan.FromHours( 1 );
-            _jwtHandler = new JwtSecurityTokenHandler();
-            _expectedException = ExpectedException.NoExceptionExpected;
         }
+
         // ===========================
         // token setup params - different variations will set different items
-
         public JwtSecurityToken Actor { get; set; }
         public string Audience { get; set; }
         public bool BoolRetVal { get; set; }
         public IEnumerable<Claim> Claims { get; set; }
         public ClaimsPrincipal ClaimsPrincipal { get; set; }
+        public CryptoProviderFactory CryptoProviderFactory { get; set; }
         public int DefaultTokenLifetimeInMinutes { get; set; }
         public string EncodedString { get; set; }
         public IList<Exception> Exceptions { get; set; }
-        public ExpectedException ExpectedException { get { return _expectedException; } set { _expectedException = value; } }
+        public ExpectedException ExpectedException { get; set; } = ExpectedException.NoExceptionExpected;
         public JwtSecurityToken ExpectedJwtSecurityToken { get; set; }
+        public DateTime Expires { get; set; } = DateTime.UtcNow + TimeSpan.FromHours(1);
         public string Issuer { get; set; }
-        public JwtSecurityTokenHandler JwtSecurityTokenHandler { get { return _jwtHandler; } set { _jwtHandler = value; } }
+        public JwtSecurityTokenHandler JwtSecurityTokenHandler { get; set; } = new JwtSecurityTokenHandler();
         public JwtSecurityToken JwtSecurityToken { get; set; }
-        public string Name { get; set; }
-        public string NameClaimType { get; set; }
         public TimeSpan MaxClockSkew { get; set; }
         public int MaxTokenSizeInBytes { get; set; }
+        public string Name { get; set; }
+        public string NameClaimType { get; set; }
+        public DateTime NotBefore { get; set; } = DateTime.UtcNow;
         public string OriginalIssuer { get; set; }
         public bool RequireExpirationTime { get; set; }
         public bool RequireSignedTokens { get; set; }
@@ -80,23 +73,15 @@ namespace System.IdentityModel.Tokens.Jwt.Tests
         public SecurityToken SecurityToken { get; set; }
         public SecurityTokenDescriptor SecurityTokenDescriptor { get; set; }
         public byte[] Signature { get; set; }
-        public SignatureProviderFactory SignatureProviderFactory { get; set; }
         public SigningCredentials SigningCredentials { get; set; }
         public string SigningInput { get; set; }
-        public SecurityToken SigningToken { get; set; }
         public Type TokenType { get; set; }
-        public string[] TokenTypeIdentifiers { get; set; }
         public TokenValidationParameters TokenValidationParameters { get; set; }
         public byte[] UnsignedBytes { get; set; }
-        public DateTime NotBefore { get { return _notbefore; } set { _notbefore = value; } }
-        public DateTime Expires { get { return _expires; } set { _expires = value; } }
-        public XmlReader XmlReader { get; set; }
-        public XmlWriter XmlWriter { get; set; }
     }
 
     public class JwtTestUtilities
     {
-
         public static string GetJwtParts( string jwt, string whichParts )
         {
             string[] parts = jwt.Split( '.' );
@@ -111,9 +96,7 @@ namespace System.IdentityModel.Tokens.Jwt.Tests
             }
 
             Console.WriteLine( string.Format("Hey, the 'whichParts' parameter wasn't recognized: '{0}'.  Returning'string.Empty' hope that is what you wanted", whichParts ) );
-
             return string.Empty;
         }
-
     }
 }

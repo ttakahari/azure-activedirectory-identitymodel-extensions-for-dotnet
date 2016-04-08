@@ -26,6 +26,7 @@
 //------------------------------------------------------------------------------
 
 using System.Collections.Generic;
+using Microsoft.IdentityModel.Tokens;
 
 namespace System.IdentityModel.Tokens.Jwt
 {
@@ -57,7 +58,7 @@ namespace System.IdentityModel.Tokens.Jwt
         {
             if (signingCredentials == null)
             {
-                this[JwtHeaderParameterNames.Alg] = SecurityAlgorithms.NONE;
+                this[JwtHeaderParameterNames.Alg] = SecurityAlgorithms.None;
             }
             else
             {

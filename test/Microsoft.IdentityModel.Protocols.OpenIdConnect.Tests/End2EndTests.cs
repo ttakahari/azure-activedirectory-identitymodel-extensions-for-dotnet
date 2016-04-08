@@ -26,10 +26,10 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.Threading;
-using System.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.IdentityModel.Tokens.Tests;
+using System.Threading;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens.Tests;
 using Xunit;
 
 namespace Microsoft.IdentityModel.Protocols.OpenIdConnect.Tests
@@ -52,7 +52,7 @@ namespace Microsoft.IdentityModel.Protocols.OpenIdConnect.Tests
             OpenIdConnectConfiguration configuration = OpenIdConnectConfigurationRetriever.GetAsync(OpenIdConfigData.OpenIdConnectMetadataFileEnd2End, new FileDocumentRetriever(), CancellationToken.None).Result;
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
             JwtSecurityToken jwtToken = 
-                tokenHandler.CreateToken(
+                tokenHandler.CreateJwtSecurityToken(
                     configuration.Issuer,
                     IdentityUtilities.DefaultAudience,
                     ClaimSets.DefaultClaimsIdentity,

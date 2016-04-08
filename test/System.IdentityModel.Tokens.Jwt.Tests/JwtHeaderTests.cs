@@ -25,7 +25,8 @@
 //
 //------------------------------------------------------------------------------
 
-using System.IdentityModel.Tokens.Tests;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens.Tests;
 using Xunit;
 
 namespace System.IdentityModel.Tokens.Jwt.Tests
@@ -42,7 +43,7 @@ namespace System.IdentityModel.Tokens.Jwt.Tests
             var header2 = new JwtHeader(null);
 
             var context = new CompareContext();
-            IdentityComparer.AreEqual<JwtHeader>(header1, header2, context);
+            IdentityComparer.AreEqual(header1, header2, context);
             TestUtilities.AssertFailIfErrors("JwtHeaderTests.Constructors", context.Diffs);
         }
 
@@ -51,7 +52,7 @@ namespace System.IdentityModel.Tokens.Jwt.Tests
         {
             JwtHeader jwtHeader = new JwtHeader();
             Assert.True(jwtHeader.Typ == JwtConstants.HeaderType, "jwtHeader.ContainsValue( JwtConstants.HeaderType )");
-            Assert.True(jwtHeader.Alg == JwtAlgorithms.NONE, "jwtHeader.SignatureAlgorithm == null");
+            Assert.True(jwtHeader.Alg == SecurityAlgorithms.None, "jwtHeader.SignatureAlgorithm == null");
             Assert.True(jwtHeader.SigningCredentials == null, "jwtHeader.SigningCredentials != null");
             Assert.True(jwtHeader.Kid == null, "jwtHeader.Kid == null");
             Assert.True(jwtHeader.Comparer.GetType() == StringComparer.Ordinal.GetType(), "jwtHeader.Comparer.GetType() != StringComparer.Ordinal.GetType()");
