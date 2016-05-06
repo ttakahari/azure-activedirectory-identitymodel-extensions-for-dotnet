@@ -38,23 +38,19 @@ namespace Microsoft.IdentityModel.Tokens
     [JsonObject]
     public class JsonWebKey : SecurityKey
     {
-        // kept private to hide that a List is used.
-        // public member returns an IList.
-        private IList<string> _certificateClauses = new List<string>();
-        private IList<string> _keyops = new List<string>();
-
         /// <summary>
         /// Returns a new instance of <see cref="JsonWebKey"/>.
         /// </summary>
         /// <param name="json">a string that contains JSON Web Key parameters in JSON format.</param>
         /// <returns><see cref="JsonWebKey"/></returns>
         /// <exception cref="ArgumentNullException">if 'json' is null or empty.</exception>
+        /// <exception cref="ArgumentException">if 'json' fails to deserialize.</exception>
         static public JsonWebKey Create(string json)
         {
             if (string.IsNullOrEmpty(json))
-                throw LogHelper.LogArgumentNullException("json");
+                throw LogHelper.LogArgumentNullException(nameof(json));
 
-            return JsonConvert.DeserializeObject<JsonWebKey>(json);
+            return new JsonWebKey(json);
         }
 
         /// <summary>
@@ -68,42 +64,29 @@ namespace Microsoft.IdentityModel.Tokens
         /// Initializes an new instance of <see cref="JsonWebKey"/> from a json string.
         /// </summary>
         /// <param name="json">a string that contains JSON Web Key parameters in JSON format.</param>
+        /// <exception cref="ArgumentNullException">if 'json' is null or empty.</exception>
+        /// <exception cref="ArgumentException">if 'json' fails to deserialize.</exception>
         public JsonWebKey(string json)
         {
-            if (string.IsNullOrWhiteSpace(json))
-                throw LogHelper.LogArgumentNullException("json");
+            if (string.IsNullOrEmpty(json))
+                throw LogHelper.LogArgumentNullException(nameof(json));
 
-            var key = JsonConvert.DeserializeObject<JsonWebKey>(json);
-            Copy(key);
+            try
+            {
+                IdentityModelEventSource.Logger.WriteVerbose(LogMessages.IDX10806, json, this);
+                JsonConvert.PopulateObject(json, this);
+            }
+            catch (Exception ex)
+            {
+                throw LogHelper.LogException<ArgumentException>(ex, LogMessages.IDX10805, json, GetType());
+            }
         }
 
-        private void Copy(JsonWebKey key)
-        {
-            this.Alg = key.Alg;
-            this.Crv = key.Crv;
-            this.D = key.D;
-            this.DP = key.DP;
-            this.DQ = key.DQ;
-            this.E = key.E;
-            this.K = key.K;
-            if (key.KeyOps != null)
-                _keyops = new List<string>(key.KeyOps);
-            this.Kid = key.Kid;
-            this.Kty = key.Kty;
-            this.N = key.N;
-            this.Oth = key.Oth;
-            this.P = key.P;
-            this.Q = key.Q;
-            this.QI = key.QI;
-            this.Use = key.Use;
-            if (key.X5c != null)
-                _certificateClauses = new List<string>(key.X5c);
-            this.X5t = key.X5t;
-            this.X5tS256 = key.X5tS256;
-            this.X5u = key.X5u;
-            this.X = key.X;
-            this.Y = key.Y;
-        }
+        /// <summary>
+        /// When deserializing from JSON any properties that are not defined will be placed here.
+        /// </summary>
+        [JsonExtensionData]
+        public virtual IDictionary<string, object> AdditionalData { get; } = new Dictionary<string, object>();
 
         /// <summary>
         /// Gets or sets the 'alg' (KeyType)..
@@ -155,21 +138,7 @@ namespace Microsoft.IdentityModel.Tokens
         /// Gets or sets the 'key_ops' (Key Operations)..
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, PropertyName = JsonWebKeyParameterNames.KeyOps, Required = Required.Default)]
-        public IList<string> KeyOps
-        {
-            get
-            {
-                return _keyops;
-            }
-            set
-            {
-                if (value == null)
-                    throw LogHelper.LogException<ArgumentNullException>(LogMessages.IDX10001, "KeyOps");
-
-                foreach (string keyOp in value)
-                    _keyops.Add(keyOp);
-            }
-        }
+        public IList<string> KeyOps { get; private set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the 'kid' (Key ID)..
@@ -234,21 +203,7 @@ namespace Microsoft.IdentityModel.Tokens
         /// Gets the 'x5c' collection (X.509 Certificate Chain)..
         /// </summary>
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore, NullValueHandling = NullValueHandling.Ignore, PropertyName = JsonWebKeyParameterNames.X5c, Required = Required.Default)]
-        public IList<string> X5c
-        {
-            get
-            {
-                return _certificateClauses;
-            }
-            set
-            {
-                if (value == null)
-                    throw LogHelper.LogException<ArgumentNullException>(LogMessages.IDX10001, "X5c");
-
-                foreach (string clause in value)
-                    _certificateClauses.Add(clause);
-            }
-        }
+        public IList<string> X5c { get; private set; } = new List<string>();
 
         /// <summary>
         /// Gets or sets the 'x5t' (X.509 Certificate SHA-1 thumbprint)..
@@ -279,11 +234,11 @@ namespace Microsoft.IdentityModel.Tokens
         {
             get
             {
-                if (Kty == JsonWebAlgorithmsKeyTypes.RSA)
+                if (Kty == JsonWebAlgorithmsKeyTypes.RSA && !string.IsNullOrEmpty(N))
                     return Base64UrlEncoder.DecodeBytes(N).Length * 8;
-                else if (Kty == JsonWebAlgorithmsKeyTypes.EllipticCurve)
+                else if (Kty == JsonWebAlgorithmsKeyTypes.EllipticCurve && !string.IsNullOrEmpty(X))
                     return Base64UrlEncoder.DecodeBytes(X).Length * 8;
-                else if (Kty == JsonWebAlgorithmsKeyTypes.Octet)
+                else if (Kty == JsonWebAlgorithmsKeyTypes.Octet && !string.IsNullOrEmpty(K))
                     return Base64UrlEncoder.DecodeBytes(K).Length * 8;
                 else
                     return 0;
@@ -308,6 +263,64 @@ namespace Microsoft.IdentityModel.Tokens
                 return CryptoProviderFactory.CreateForVerifying(this, algorithm);
             else
                 return CryptoProviderFactory.CreateForSigning(this, algorithm);
+        }
+
+        public override bool IsSupportedAlgorithm(string algorithm)
+        {
+            if (string.IsNullOrEmpty(algorithm))
+                return false;
+
+            if (Kty == JsonWebAlgorithmsKeyTypes.RSA)
+            {
+                switch (algorithm)
+                {
+                    case SecurityAlgorithms.RsaSha256:
+                    case SecurityAlgorithms.RsaSha384:
+                    case SecurityAlgorithms.RsaSha512:
+                    case SecurityAlgorithms.RsaSha256Signature:
+                    case SecurityAlgorithms.RsaSha384Signature:
+                    case SecurityAlgorithms.RsaSha512Signature:
+                        return true;
+
+                    default:
+                        return false;
+                }
+            }
+            else if (Kty == JsonWebAlgorithmsKeyTypes.EllipticCurve)
+            {
+                switch (algorithm)
+                {
+                    case SecurityAlgorithms.EcdsaSha256:
+                    case SecurityAlgorithms.EcdsaSha384:
+                    case SecurityAlgorithms.EcdsaSha512:
+                    case SecurityAlgorithms.EcdsaSha256Signature:
+                    case SecurityAlgorithms.EcdsaSha384Signature:
+                    case SecurityAlgorithms.EcdsaSha512Signature:
+                        return true;
+
+                    default:
+                        return false;
+                }
+            }
+            else if (Kty == JsonWebAlgorithmsKeyTypes.Octet)
+            {
+                switch (algorithm)
+                {
+                    case SecurityAlgorithms.HmacSha256Signature:
+                    case SecurityAlgorithms.HmacSha384Signature:
+                    case SecurityAlgorithms.HmacSha512Signature:
+                    case SecurityAlgorithms.HmacSha256:
+                    case SecurityAlgorithms.HmacSha384:
+                    case SecurityAlgorithms.HmacSha512:
+                        return true;
+
+                    default:
+                        return false;
+                }
+            }
+            else
+                return false;
+
         }
     }
 }

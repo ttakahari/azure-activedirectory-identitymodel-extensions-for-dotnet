@@ -62,7 +62,7 @@ namespace Microsoft.IdentityModel.Tokens
         internal const string IDX10236 = "IDX10236: Issuer Validated.Issuer: '{0}'";
         internal const string IDX10237 = "IDX10237: ValidateIssuerSigningKey property on ValidationParamaters is set to false. Exiting without validating the issuer signing key.";
         internal const string IDX10238 = "IDX10238: ValidateLifetime property on ValidationParamaters is set to false. Exiting without validating the lifetime.";
-        internal const string IDX10239 = "IDX10239: Lifetime of the token is validated.";
+        internal const string IDX10239 = "IDX10239: Lifetime of the token is valid.";
         internal const string IDX10240 = "IDX10240: No token replay is detected.";
         internal const string IDX10245 = "IDX10245: Creating claims identity from the validated token: '{0}'.";
 
@@ -100,10 +100,8 @@ namespace Microsoft.IdentityModel.Tokens
         internal const string IDX10801 = "IDX10801: Unable to create an RSA public key from the Exponent and Modulus found in the JsonWebKey: E: '{0}', N: '{1}'. See inner exception for additional details.";
         internal const string IDX10802 = "IDX10802: Unable to create an X509Certificate2 from the X509Data: '{0}'. See inner exception for additional details.";
         internal const string IDX10804 = "IDX10804: Unable to retrieve document from: '{0}'.";
-        internal const string IDX10806 = "IDX10806: Deserializing json string into json web keys.";
-
+        internal const string IDX10805 = "IDX10805: Error deserializing json: '{0}' into '{1}'.";
+        internal const string IDX10806 = "IDX10806: Deserializing json: '{0}' into '{1}'.";
 #pragma warning restore 1591
-
-
     }
 }
