@@ -3,6 +3,7 @@
   "dependencies": {
     "xunit": "2.1.0",
     "dotnet-test-xunit": "1.0.0-*",
+    "Microsoft.IdentityModel.Tokens.Tests": "5.0.0-*",
     "Microsoft.NETCore.Platforms": "1.0.1-*"
   },
   "exclude": [
