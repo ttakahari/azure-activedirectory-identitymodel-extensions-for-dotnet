@@ -34,7 +34,7 @@
     }
   },
   "buildOptions": {
-    "warningsAsErrors": true
-  },
-  "content": [ "google-certs.json" ]
+    "warningsAsErrors": true,
+    "copyToOutput": [ "google-certs.json" ]
+  }
 }
