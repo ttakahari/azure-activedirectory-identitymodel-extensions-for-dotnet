@@ -38,6 +38,10 @@ namespace Microsoft.IdentityModel.Tokens
     {
         private bool? _hasPrivateKey;
 
+        private bool _foundPrivateKeyDetermined = false;
+
+        private PrivateKeyExistence _foundPrivateKey;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="RsaSecurityKey"/> class.
         /// </summary>
@@ -68,6 +72,7 @@ namespace Microsoft.IdentityModel.Tokens
         /// Gets a bool indicating if a private key exists.
         /// </summary>
         /// <return>true if it has a private key; otherwise, false.</return>
+        [System.Obsolete("HasPrivateKey method is deprecated, please use FoundPrivateKey instead.")]
         public override bool HasPrivateKey
         {
             get
@@ -97,6 +102,42 @@ namespace Microsoft.IdentityModel.Tokens
                 }
                 return _hasPrivateKey.Value;
             }
+        }
+
+        /// <summary>
+        /// Gets an enum indicating if a private key exists.
+        /// </summary>
+        /// <return>'Yes' if private key exists for sure; 'No' if private key doesn't exist for sure; 'Unknown' if we cannot determine.</return>
+        public override PrivateKeyExistence FoundPrivateKey
+        {
+            get
+            {
+                if (_foundPrivateKeyDetermined)
+                    return _foundPrivateKey;
+
+                _foundPrivateKeyDetermined = true;
+
+                if (Rsa != null)
+                {
+                    try
+                    {
+                        Parameters = Rsa.ExportParameters(true);                       
+                    }
+                    catch(Exception)
+                    {
+                        _foundPrivateKey = PrivateKeyExistence.Unknown;
+                        return _foundPrivateKey;
+                    }
+                }
+
+                if (Parameters.D != null && Parameters.DP != null && Parameters.DQ != null &&
+                    Parameters.P != null && Parameters.Q != null && Parameters.InverseQ != null)
+                    _foundPrivateKey = PrivateKeyExistence.Yes;
+                else
+                    _foundPrivateKey = PrivateKeyExistence.No;
+
+                return _foundPrivateKey;
+            }           
         }
 
         /// <summary>

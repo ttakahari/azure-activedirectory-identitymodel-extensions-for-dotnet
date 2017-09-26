@@ -36,7 +36,32 @@ namespace Microsoft.IdentityModel.Tokens
         /// This must be overridden to get a bool indicating if a private key exists.
         /// </summary>
         /// <return>true if it has a private key; otherwise, false.</return>
+        [System.Obsolete("HasPrivateKey method is deprecated, please use FoundPrivateKey instead.")]
         public abstract bool HasPrivateKey { get; }
 
+        /// <summary>
+        /// This must be overridden to get an enum indicating if a private key exists.
+        /// </summary>
+        /// <return>'Yes' if private key exists for sure; 'No' if private key doesn't exist for sure; 'Unknown' if we cannot determine.</return>
+        public abstract PrivateKeyExistence FoundPrivateKey { get; }
     }
+
+    /// <summary>
+    /// Enum for the existence of private key
+    /// </summary>
+    public enum PrivateKeyExistence
+    {
+        /// <summary>
+        /// private key exists for sure
+        /// </summary>
+        Yes,
+        /// <summary>
+        /// private key doesn't exist for sure
+        /// </summary>
+        No,
+        /// <summary>
+        /// unable to determine the existence of private key
+        /// </summary>
+        Unknown
+    };
 }

@@ -122,7 +122,7 @@ namespace Microsoft.IdentityModel.Tokens
 
             _minimumAsymmetricKeySizeInBitsForSigningMap = new Dictionary<string, int>(DefaultMinimumAsymmetricKeySizeInBitsForSigningMap);
             _minimumAsymmetricKeySizeInBitsForVerifyingMap = new Dictionary<string, int>(DefaultMinimumAsymmetricKeySizeInBitsForVerifyingMap);
-            if (willCreateSignatures && !HasPrivateKey(key))
+            if (willCreateSignatures && FoundPrivateKey(key) == PrivateKeyExistence.No)
                 throw LogHelper.LogExceptionMessage(new InvalidOperationException(LogHelper.FormatInvariant(LogMessages.IDX10638, key)));
 
             if (!key.CryptoProviderFactory.IsSupportedAlgorithm(algorithm, key))
@@ -154,17 +154,17 @@ namespace Microsoft.IdentityModel.Tokens
             }
         }
 
-        private bool HasPrivateKey(SecurityKey key)
+        private PrivateKeyExistence FoundPrivateKey(SecurityKey key)
         {
             AsymmetricSecurityKey asymmetricSecurityKey = key as AsymmetricSecurityKey;
             if (asymmetricSecurityKey != null)
-                return asymmetricSecurityKey.HasPrivateKey;
+                return asymmetricSecurityKey.FoundPrivateKey;
 
             JsonWebKey jsonWebKey = key as JsonWebKey;
             if (jsonWebKey != null)
-                return jsonWebKey.HasPrivateKey;
+                return jsonWebKey.HasPrivateKey ? PrivateKeyExistence.Yes : PrivateKeyExistence.No;
 
-            return false;
+            return PrivateKeyExistence.Unknown;
         }
 
 #if NETSTANDARD1_4
@@ -339,7 +339,7 @@ namespace Microsoft.IdentityModel.Tokens
             else if (_ecdsa != null)
                 return _ecdsa.SignData(input);
 #endif
-            throw LogHelper.LogExceptionMessage(new InvalidOperationException(LogMessages.IDX10644));
+            throw LogHelper.LogExceptionMessage(new InvalidOperationException(LogHelper.FormatInvariant(LogMessages.IDX10644, _hashAlgorithm)));
         }
 
         /// <summary>
