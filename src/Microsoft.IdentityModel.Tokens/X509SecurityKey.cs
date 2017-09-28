@@ -26,11 +26,71 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.IdentityModel.Tokens
 {
+    internal class MethodInAssembly
+    {
+        public delegate AsymmetricAlgorithm GetPrivateKeyDelegate(X509Certificate2 certificate);
+
+        private static GetPrivateKeyDelegate _getPrivateKey = null;
+
+        public static GetPrivateKeyDelegate GetPrivateKey
+        {
+            get
+            {
+                if (_getPrivateKey != null)
+                    return _getPrivateKey;
+
+#if NETSTANDARD1_4
+                _getPrivateKey = certificate =>
+                {
+                    return RSACertificateExtensions.GetRSAPrivateKey(certificate);
+                };
+
+                return _getPrivateKey;
+#else
+                Assembly systemCoreAssembly = null;
+                foreach (var assem in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    if (assem.GetName().Name == "System.Core")
+                    {
+                        systemCoreAssembly = assem;
+                    }
+                }
+
+                if (systemCoreAssembly != null)
+                {
+                    Type type = systemCoreAssembly.GetType("System.Security.Cryptography.X509Certificates.RSACertificateExtensions");
+                    if (type != null)
+                    {
+                        var method = type.GetMethod("GetRSAPrivateKey");
+                        if (method != null)
+                        {
+                            _getPrivateKey = certificate =>
+                            {
+                                object[] staticParameters = { certificate };
+                                return method.Invoke(null, staticParameters) as AsymmetricAlgorithm;
+                            };
+                            return _getPrivateKey;
+                        }
+                    }
+                }
+
+                _getPrivateKey = certificate =>
+                {
+                    return certificate.PrivateKey;
+                };
+
+                return _getPrivateKey;
+#endif
+            }
+        }
+    }
+
     /// <summary>
     /// Security key that allows access to cert
     /// </summary>
@@ -85,12 +145,8 @@ namespace Microsoft.IdentityModel.Tokens
                     {
                         if (!_privateKeyAvailabilityDetermined)
                         {
-#if NETSTANDARD1_4
-                            _privateKey = RSACertificateExtensions.GetRSAPrivateKey(_certificate);
-#else
-                            _privateKey = _certificate.PrivateKey;
-#endif
                             _privateKeyAvailabilityDetermined = true;
+                            _privateKey = MethodInAssembly.GetPrivateKey(_certificate);
                         }
                     }
                 }
