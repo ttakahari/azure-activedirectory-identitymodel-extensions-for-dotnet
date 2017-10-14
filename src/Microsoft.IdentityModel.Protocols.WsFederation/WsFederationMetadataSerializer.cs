@@ -59,7 +59,8 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         /// <exception cref="XmlReadException">if error occurs when reading metadata</exception>
         public WsFederationConfiguration ReadMetadata(XmlReader reader)
         {
-            XmlUtil.CheckReaderOnEntry(reader, Elements.EntityDescriptor, Namespaces.MetadataNamespace);
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
 
             var envelopeReader = new EnvelopedSignatureReader(reader);
 
@@ -86,14 +87,19 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         /// <exception cref="XmlReadException">if error occurs when reading entity descriptor</exception>
         protected virtual WsFederationConfiguration ReadEntityDescriptor(XmlReader reader)
         {
-            XmlUtil.CheckReaderOnEntry(reader, Elements.EntityDescriptor, Namespaces.MetadataNamespace);
+            // check invalid or empty <EntityDescriptor>
+            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<WsFederationConfiguration>(reader,
+                reader.IsStartElement(Elements.EntityDescriptor, Namespaces.MetadataNamespace),
+                Elements.EntityDescriptor);
+            if (invalidOrEmptyElement.Handled)
+                return invalidOrEmptyElement.Result; // we cannot simply return a new WsFederationConfiguration instance, since an empty element can have issuer.
 
             var configuration = new WsFederationConfiguration();
 
             // get entityID for issuer
             var issuer = reader.GetAttribute(Attributes.EntityId);
             if (string.IsNullOrEmpty(issuer))
-                throw XmlUtil.LogReadException(LogMessages.IDX22801);
+                Logger.WriteWarning(LogMessages.IDX22801);
             configuration.Issuer = issuer;
 
             // <EntityDescriptor>
@@ -136,7 +142,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
 
             // The metadata xml should contain a SecurityTokenServiceType RoleDescriptor
             if (!hasSecurityTokenServiceTypeRoleDescriptor)
-                throw XmlUtil.LogReadException(LogMessages.IDX22804);
+                Logger.WriteWarning(LogMessages.IDX22804);
 
             return configuration;
         }
@@ -181,14 +187,16 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         /// <exception cref="XmlReadException">if error occurs when reading role descriptor</exception>
         protected virtual SecurityTokenServiceTypeRoleDescriptor ReadSecurityTokenServiceTypeRoleDescriptor(XmlReader reader)
         {
-            XmlUtil.CheckReaderOnEntry(reader, Elements.RoleDescriptor, Namespaces.MetadataNamespace);
-
-            if (!IsSecurityTokenServiceTypeRoleDescriptor(reader))
-                throw XmlUtil.LogReadException(LogMessages.IDX22804);
-
             var roleDescriptor = new SecurityTokenServiceTypeRoleDescriptor();
 
-            // <RoleDescriptorr>
+            // check invalid or empty <RoleDescriptor>
+            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<SecurityTokenServiceTypeRoleDescriptor>(reader,
+                IsSecurityTokenServiceTypeRoleDescriptor, 
+                Elements.RoleDescriptor);
+            if (invalidOrEmptyElement.Handled)
+                return roleDescriptor;           
+
+            // <RoleDescriptor>
             reader.ReadStartElement();
             while (reader.IsStartElement())
             {
@@ -200,7 +208,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
                     reader.ReadOuterXml();
             }
 
-            // </RoleDescriptorr>
+            // </RoleDescriptor>
             reader.ReadEndElement();
 
             if (roleDescriptor.KeyInfos.Count == 0)
@@ -220,36 +228,77 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         /// <exception cref="XmlReadException">if error occurs when reading PassiveRequestorEndpoint</exception>
         protected virtual string ReadPassiveRequestorEndpoint(XmlReader reader)
         {
-            XmlUtil.CheckReaderOnEntry(reader, Elements.PassiveRequestorEndpoint, Namespaces.FederationNamespace);
+            // check invalid or empty <PassiveRequestorEndpoint>
+            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<string>(reader,
+                reader.IsStartElement(Elements.PassiveRequestorEndpoint, Namespaces.FederationNamespace),
+                Elements.PassiveRequestorEndpoint);
+            if (invalidOrEmptyElement.Handled)
+                return null;
+
+            string tokenEndpoint = null;
 
             // <PassiveRequestorEndpoint>
             reader.ReadStartElement();
             reader.MoveToContent();
 
-            XmlUtil.CheckReaderOnEntry(reader, Elements.EndpointReference, Namespaces.AddressingNamspace);
-            reader.ReadStartElement(Elements.EndpointReference, Namespaces.AddressingNamspace);  // EndpointReference
-            reader.MoveToContent();
+            while (reader.IsStartElement())
+            {
+                if(reader.IsStartElement(Elements.EndpointReference, Namespaces.AddressingNamspace))
+                {
+                    // check invalid or empty <EndpointReference>
+                    var invalidOrEmptyElementForEndpointReference = HandleIncorrectAndEmptyElement<string>(reader,
+                        reader.IsStartElement(Elements.EndpointReference, Namespaces.AddressingNamspace),
+                        Elements.EndpointReference);
+                    if (invalidOrEmptyElementForEndpointReference.Handled)
+                        continue;
 
-            XmlUtil.CheckReaderOnEntry(reader, Elements.Address, Namespaces.AddressingNamspace);
-            reader.ReadStartElement(Elements.Address, Namespaces.AddressingNamspace);  // Address
-            reader.MoveToContent();
+                    // <EndpointReference>
+                    reader.ReadStartElement();
+                    reader.MoveToContent();
 
-            var tokenEndpoint = Trim(reader.ReadContentAsString());
+                    while (reader.IsStartElement())
+                    {
+                        // check invalid or empty <Address>
+                        if (reader.IsStartElement(Elements.Address, Namespaces.AddressingNamspace))
+                        {
+                            var invalidOrEmptyElementForAddress = HandleIncorrectAndEmptyElement<string>(reader,
+                                reader.IsStartElement(Elements.Address, Namespaces.AddressingNamspace),
+                                Elements.Address);
+                            if (invalidOrEmptyElementForAddress.Handled)
+                                continue;
 
-            if (string.IsNullOrEmpty(tokenEndpoint))
-                throw XmlUtil.LogReadException(LogMessages.IDX22803);
+                            // <Address>
+                            reader.ReadStartElement();  
+                            reader.MoveToContent();
 
-            // </Address>
-            reader.MoveToContent();
-            reader.ReadEndElement();
+                            tokenEndpoint = Trim(reader.ReadContentAsString());
 
-            // </EndpointReference>
-            reader.MoveToContent();
-            reader.ReadEndElement();
+                            // </Address>
+                            reader.MoveToContent();
+                            reader.ReadEndElement();
+                        }
+                        else
+                        {
+                            reader.ReadOuterXml();
+                        }
+                    }
+
+                    // </EndpointReference>
+                    reader.MoveToContent();
+                    reader.ReadEndElement();
+                }
+                else
+                {
+                    reader.ReadOuterXml();
+                }
+            }
 
             // </PassiveRequestorEndpoint>
             reader.MoveToContent();
             reader.ReadEndElement();
+
+            if (string.IsNullOrEmpty(tokenEndpoint))
+                Logger.WriteWarning(LogMessages.IDX22803);
 
             return tokenEndpoint;
         }
@@ -278,6 +327,58 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
 
             char[] charsToTrim = { ' ', '\n' };
             return stringToTrim.Trim(charsToTrim);
+        }
+
+        internal static ElementResult<T> HandleIncorrectAndEmptyElement<T>(XmlReader reader, bool isExpectedElement, string expectedElement)
+        {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
+            var result = new ElementResult<T>()
+            {
+                Handled = true,
+                Result = (T)Activator.CreateInstance(typeof(T))
+            };
+
+            if (!isExpectedElement)
+            {
+                Logger.WriteWarning(expectedElement + " is expected");
+                return result;
+            }
+
+            if (reader.IsEmptyElement)
+            {
+                Logger.WriteWarning(expectedElement + " is an empty element");
+                if (Elements.EntityDescriptor.Equals(expectedElement))
+                {
+                    var issuer = reader.GetAttribute(Attributes.EntityId);
+                    if (string.IsNullOrEmpty(issuer))
+                        Logger.WriteWarning(LogMessages.IDX22801);
+                    (result.Result as WsFederationConfiguration).Issuer = issuer;
+                }
+                reader.ReadStartElement();
+                reader.MoveToContent();
+                return result;
+            }
+
+            result.Handled = false;
+            return result;
+        }
+
+        internal static ElementResult<T> HandleIncorrectAndEmptyElement<T>(XmlReader reader, CheckElementDelegate checkElement, string expectedElement) where T : new()
+        {
+            if (reader == null)
+                throw new ArgumentNullException(nameof(reader));
+
+            return HandleIncorrectAndEmptyElement<T>(reader, checkElement(reader), expectedElement);
+        }
+
+        internal delegate bool CheckElementDelegate(XmlReader reader); 
+
+        internal class ElementResult<T>
+        {
+            public bool Handled = false;
+            public T Result = default(T);
         }
 
 #endregion
