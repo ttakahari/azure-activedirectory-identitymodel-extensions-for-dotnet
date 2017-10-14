@@ -120,85 +120,85 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation.Tests
                         Metadata = ReferenceMetadata.AADCommonMetadataWithEmptyElement,
                         TestId = nameof(ReferenceMetadata.AADCommonMetadataWithEmptyElement)
                     },
-                    new WsFederationMetadataTheoryData
-                    {
-                        Configuration = new WsFederationConfiguration
-                        {
-                            Issuer = ReferenceMetadata.Issuer,
-                            TokenEndpoint = ReferenceMetadata.TokenEndpoint
-                        },
-                        Metadata = ReferenceMetadata.MetadataNoKeyDescriptorForSigningInRoleDescriptor,
-                        TestId = nameof(ReferenceMetadata.MetadataNoKeyDescriptorForSigningInRoleDescriptor)
-                    },
-                    new WsFederationMetadataTheoryData
-                    {
-                        ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX22801:"),
-                        Metadata = ReferenceMetadata.MetadataNoIssuer,
-                        TestId = nameof(ReferenceMetadata.MetadataNoIssuer)
-                    },
-                    new WsFederationMetadataTheoryData
-                    {
-                        ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX22803:"),
-                        Metadata = ReferenceMetadata.MetadataNoTokenUri,
-                        TestId = nameof(ReferenceMetadata.MetadataNoTokenUri)
-                    },
-                    new WsFederationMetadataTheoryData
-                    {
-                        ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX22800:", typeof(FormatException)),
-                        Metadata = ReferenceMetadata.MetadataMalformedCertificate,
-                        TestId = nameof(ReferenceMetadata.MetadataMalformedCertificate)
-                    },
-                    new WsFederationMetadataTheoryData
-                    {
-                        ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX30025:"),
-                        Metadata = ReferenceMetadata.MetadataUnknownElementBeforeSignatureEndElement,
-                        TestId = nameof(ReferenceMetadata.MetadataUnknownElementBeforeSignatureEndElement)
-                    },
-                    new WsFederationMetadataTheoryData
-                    {
-                        ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX30011:"),
-                        Metadata = ReferenceMetadata.MetadataNoSignedInfoInSignature,
-                        TestId = nameof(ReferenceMetadata.MetadataNoSignedInfoInSignature)
-                    },
-                    new WsFederationMetadataTheoryData
-                    {
-                        ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX30011:"),
-                        Metadata = ReferenceMetadata.MetadataNoEntityDescriptor,
-                        TestId = nameof(ReferenceMetadata.MetadataNoEntityDescriptor)
-                    },
-                    new WsFederationMetadataTheoryData
-                    {
-                        ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX22804:"),
-                        Metadata = ReferenceMetadata.MetadataNoRoleDescriptor,
-                        TestId = nameof(ReferenceMetadata.MetadataNoRoleDescriptor)
-                    },
-                    new WsFederationMetadataTheoryData
-                    {
-                        ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX22802:"),
-                        Metadata = ReferenceMetadata.MetadataNoKeyInfoInKeyDescriptor,
-                        TestId = nameof(ReferenceMetadata.MetadataNoKeyInfoInKeyDescriptor)
-                    },
-                    new WsFederationMetadataTheoryData
-                    {
-                        Configuration = new WsFederationConfiguration
-                        {
-                            Issuer = ReferenceMetadata.Issuer
-                        },
-                        Metadata = ReferenceMetadata.MetadataNoPassiveRequestorEndpointInRoleDescriptor,
-                        TestId = nameof(ReferenceMetadata.MetadataNoPassiveRequestorEndpointInRoleDescriptor)
-                    },
-                    new WsFederationMetadataTheoryData
-                    {
-                        ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX30011:"),
-                        Metadata = ReferenceMetadata.MetadataNoEndpointReference,
-                        TestId = nameof(ReferenceMetadata.MetadataNoEndpointReference)
-                    },
-                    new WsFederationMetadataTheoryData
-                    {
-                        ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX30011:"),
-                        Metadata = ReferenceMetadata.MetadataNoAddressInEndpointReference,
-                        TestId = nameof(ReferenceMetadata.MetadataNoAddressInEndpointReference)
-                    },
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    Configuration = new WsFederationConfiguration
+                    //    {
+                    //        Issuer = ReferenceMetadata.Issuer,
+                    //        TokenEndpoint = ReferenceMetadata.TokenEndpoint
+                    //    },
+                    //    Metadata = ReferenceMetadata.MetadataNoKeyDescriptorForSigningInRoleDescriptor,
+                    //    TestId = nameof(ReferenceMetadata.MetadataNoKeyDescriptorForSigningInRoleDescriptor)
+                    //},
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX22801:"),
+                    //    Metadata = ReferenceMetadata.MetadataNoIssuer,
+                    //    TestId = nameof(ReferenceMetadata.MetadataNoIssuer)
+                    //},
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX22803:"),
+                    //    Metadata = ReferenceMetadata.MetadataNoTokenUri,
+                    //    TestId = nameof(ReferenceMetadata.MetadataNoTokenUri)
+                    //},
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX22800:", typeof(FormatException)),
+                    //    Metadata = ReferenceMetadata.MetadataMalformedCertificate,
+                    //    TestId = nameof(ReferenceMetadata.MetadataMalformedCertificate)
+                    //},
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX30025:"),
+                    //    Metadata = ReferenceMetadata.MetadataUnknownElementBeforeSignatureEndElement,
+                    //    TestId = nameof(ReferenceMetadata.MetadataUnknownElementBeforeSignatureEndElement)
+                    //},
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX30011:"),
+                    //    Metadata = ReferenceMetadata.MetadataNoSignedInfoInSignature,
+                    //    TestId = nameof(ReferenceMetadata.MetadataNoSignedInfoInSignature)
+                    //},
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX30011:"),
+                    //    Metadata = ReferenceMetadata.MetadataNoEntityDescriptor,
+                    //    TestId = nameof(ReferenceMetadata.MetadataNoEntityDescriptor)
+                    //},
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX22804:"),
+                    //    Metadata = ReferenceMetadata.MetadataNoRoleDescriptor,
+                    //    TestId = nameof(ReferenceMetadata.MetadataNoRoleDescriptor)
+                    //},
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX22802:"),
+                    //    Metadata = ReferenceMetadata.MetadataNoKeyInfoInKeyDescriptor,
+                    //    TestId = nameof(ReferenceMetadata.MetadataNoKeyInfoInKeyDescriptor)
+                    //},
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    Configuration = new WsFederationConfiguration
+                    //    {
+                    //        Issuer = ReferenceMetadata.Issuer
+                    //    },
+                    //    Metadata = ReferenceMetadata.MetadataNoPassiveRequestorEndpointInRoleDescriptor,
+                    //    TestId = nameof(ReferenceMetadata.MetadataNoPassiveRequestorEndpointInRoleDescriptor)
+                    //},
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX30011:"),
+                    //    Metadata = ReferenceMetadata.MetadataNoEndpointReference,
+                    //    TestId = nameof(ReferenceMetadata.MetadataNoEndpointReference)
+                    //},
+                    //new WsFederationMetadataTheoryData
+                    //{
+                    //    ExpectedException = new ExpectedException(typeof(XmlReadException), "IDX30011:"),
+                    //    Metadata = ReferenceMetadata.MetadataNoAddressInEndpointReference,
+                    //    TestId = nameof(ReferenceMetadata.MetadataNoAddressInEndpointReference)
+                    //},
                     new WsFederationMetadataTheoryData
                     {
                         Metadata = ReferenceMetadata.AdfsV2Metadata,

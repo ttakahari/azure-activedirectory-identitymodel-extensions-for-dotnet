@@ -60,7 +60,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         public WsFederationConfiguration ReadMetadata(XmlReader reader)
         {
             if (reader == null)
-                throw new ArgumentNullException(nameof(reader));
+                throw LogArgumentNullException(nameof(reader));
 
             var envelopeReader = new EnvelopedSignatureReader(reader);
 
@@ -87,6 +87,9 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         /// <exception cref="XmlReadException">if error occurs when reading entity descriptor</exception>
         protected virtual WsFederationConfiguration ReadEntityDescriptor(XmlReader reader)
         {
+            if (reader == null)
+                throw LogArgumentNullException(nameof(reader));
+
             // check invalid or empty <EntityDescriptor>
             var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<WsFederationConfiguration>(reader,
                 reader.IsStartElement(Elements.EntityDescriptor, Namespaces.MetadataNamespace),
@@ -187,6 +190,9 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         /// <exception cref="XmlReadException">if error occurs when reading role descriptor</exception>
         protected virtual SecurityTokenServiceTypeRoleDescriptor ReadSecurityTokenServiceTypeRoleDescriptor(XmlReader reader)
         {
+            if (reader == null)
+                throw LogArgumentNullException(nameof(reader));
+
             var roleDescriptor = new SecurityTokenServiceTypeRoleDescriptor();
 
             // check invalid or empty <RoleDescriptor>
@@ -228,6 +234,9 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         /// <exception cref="XmlReadException">if error occurs when reading PassiveRequestorEndpoint</exception>
         protected virtual string ReadPassiveRequestorEndpoint(XmlReader reader)
         {
+            if (reader == null)
+                throw LogArgumentNullException(nameof(reader));
+
             // check invalid or empty <PassiveRequestorEndpoint>
             var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<string>(reader,
                 reader.IsStartElement(Elements.PassiveRequestorEndpoint, Namespaces.FederationNamespace),
@@ -334,11 +343,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
-            var result = new ElementResult<T>()
-            {
-                Handled = true,
-                Result = (T)Activator.CreateInstance(typeof(T))
-            };
+            var result = new ElementResult<T>();
 
             if (!isExpectedElement)
             {
@@ -373,12 +378,20 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
             return HandleIncorrectAndEmptyElement<T>(reader, checkElement(reader), expectedElement);
         }
 
-        internal delegate bool CheckElementDelegate(XmlReader reader); 
+        internal delegate bool CheckElementDelegate(XmlReader reader);
 
         internal class ElementResult<T>
         {
-            public bool Handled = false;
-            public T Result = default(T);
+            public bool Handled;
+            public T Result;
+            public ElementResult()
+            {
+                Handled = false;
+                if (typeof(string) == typeof(T))
+                    Result = default(T);
+                else
+                    Result = (T)Activator.CreateInstance(typeof(T));
+            }
         }
 
 #endregion
