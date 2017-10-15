@@ -25,6 +25,9 @@
 //
 //------------------------------------------------------------------------------
 
+using Microsoft.IdentityModel.Xml;
+using System.Collections.Generic;
+
 namespace Microsoft.IdentityModel.Protocols.WsFederation
 {
     /// <summary>
@@ -123,7 +126,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         /// </summary>
         public static class Namespaces
         {
-            public const string AddressingNamspace = "http://www.w3.org/2005/08/addressing";
+            public const string AddressingNamespace = "http://www.w3.org/2005/08/addressing";
             public const string FederationNamespace = "http://docs.oasis-open.org/wsfed/federation/200706";
             public const string MetadataNamespace = "urn:oasis:names:tc:SAML:2.0:metadata";
         }
@@ -159,6 +162,21 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
             public const string Xsi = "xsi";
             public const string Wsa = "wsa";
         }
+
+        /// <summary>
+        /// Element and namespace correspondance dictionary
+        /// </summary>
+        internal static Dictionary<string, string> ElementNamespacePair = 
+            new Dictionary<string, string>()
+            {
+                [Elements.Address] = Namespaces.AddressingNamespace,
+                [Elements.EndpointReference] = Namespaces.AddressingNamespace,
+                [Elements.EntityDescriptor] = Namespaces.MetadataNamespace,
+                [Elements.KeyDescriptor] = Namespaces.MetadataNamespace,                
+                [Elements.PassiveRequestorEndpoint] = Namespaces.FederationNamespace,
+                [Elements.RoleDescriptor] = Namespaces.MetadataNamespace,
+                [XmlSignatureConstants.Elements.KeyInfo] = XmlSignatureConstants.Namespace
+            };
 
         #pragma warning restore 1591
     }

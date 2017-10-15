@@ -91,11 +91,9 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
                 throw LogArgumentNullException(nameof(reader));
 
             // check invalid or empty <EntityDescriptor>
-            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<WsFederationConfiguration>(reader,
-                reader.IsStartElement(Elements.EntityDescriptor, Namespaces.MetadataNamespace),
-                Elements.EntityDescriptor);
-            if (invalidOrEmptyElement.Handled)
-                return invalidOrEmptyElement.Result; // we cannot simply return a new WsFederationConfiguration instance, since an empty element can have issuer.
+            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<WsFederationConfiguration>(reader, Elements.EntityDescriptor);
+            if (invalidOrEmptyElement.Exists)
+                return invalidOrEmptyElement.ResultObject; // we cannot simply return a new WsFederationConfiguration instance, since an empty element can have issuer.
 
             var configuration = new WsFederationConfiguration();
 
@@ -162,11 +160,9 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
                 throw LogArgumentNullException(nameof(reader));
 
             // check invalid or empty <KeyDescriptor>
-            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<KeyInfo>(reader,
-                reader.IsStartElement(Elements.KeyDescriptor, Namespaces.MetadataNamespace) && keyUse.Signing.Equals(reader.GetAttribute(Attributes.Use)),
-                Elements.KeyDescriptor);
-            if (invalidOrEmptyElement.Handled)
-                return invalidOrEmptyElement.Result;
+            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<KeyInfo>(reader, Elements.KeyDescriptor);
+            if (invalidOrEmptyElement.Exists)
+                return invalidOrEmptyElement.ResultObject;
 
             var keyInfo = new KeyInfo();
             
@@ -175,7 +171,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
 
             while (reader.IsStartElement())
             {
-                if (reader.IsStartElement(XmlSignatureConstants.Elements.KeyInfo, XmlSignatureConstants.Namespace))
+                if (reader.IsStartElement(XmlSignatureConstants.Elements.KeyInfo, ElementNamespacePair[XmlSignatureConstants.Elements.KeyInfo]))
                     keyInfo = _dsigSerializer.ReadKeyInfo(reader);
                 else
                     reader.ReadOuterXml();
@@ -201,19 +197,17 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
             var roleDescriptor = new SecurityTokenServiceTypeRoleDescriptor();
 
             // check invalid or empty <RoleDescriptor>
-            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<SecurityTokenServiceTypeRoleDescriptor>(reader,
-                IsSecurityTokenServiceTypeRoleDescriptor(reader), 
-                Elements.RoleDescriptor);
-            if (invalidOrEmptyElement.Handled)
+            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<SecurityTokenServiceTypeRoleDescriptor>(reader, Elements.RoleDescriptor);
+            if (invalidOrEmptyElement.Exists)
                 return roleDescriptor;           
 
             // <RoleDescriptor>
             reader.ReadStartElement();
             while (reader.IsStartElement())
             {
-                if (reader.IsStartElement(Elements.KeyDescriptor, Namespaces.MetadataNamespace) && keyUse.Signing.Equals(reader.GetAttribute(Attributes.Use)))
+                if (reader.IsStartElement(Elements.KeyDescriptor, ElementNamespacePair[Elements.KeyDescriptor]) && keyUse.Signing.Equals(reader.GetAttribute(Attributes.Use)))
                     roleDescriptor.KeyInfos.Add(ReadKeyDescriptorForSigning(reader));
-                else if (reader.IsStartElement(Elements.PassiveRequestorEndpoint, Namespaces.FederationNamespace))
+                else if (reader.IsStartElement(Elements.PassiveRequestorEndpoint, ElementNamespacePair[Elements.PassiveRequestorEndpoint]))
                     roleDescriptor.TokenEndpoint = ReadPassiveRequestorEndpoint(reader);
                 else
                     reader.ReadOuterXml();
@@ -243,10 +237,8 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
                 throw LogArgumentNullException(nameof(reader));
 
             // check invalid or empty <PassiveRequestorEndpoint>
-            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<string>(reader,
-                reader.IsStartElement(Elements.PassiveRequestorEndpoint, Namespaces.FederationNamespace),
-                Elements.PassiveRequestorEndpoint);
-            if (invalidOrEmptyElement.Handled)
+            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<string>(reader, Elements.PassiveRequestorEndpoint);
+            if (invalidOrEmptyElement.Exists)
                 return null;
 
             string tokenEndpoint = null;
@@ -257,13 +249,11 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
 
             while (reader.IsStartElement())
             {
-                if(reader.IsStartElement(Elements.EndpointReference, Namespaces.AddressingNamspace))
+                if(reader.IsStartElement(Elements.EndpointReference, ElementNamespacePair[Elements.EndpointReference]))
                 {
                     // check invalid or empty <EndpointReference>
-                    var invalidOrEmptyElementForEndpointReference = HandleIncorrectAndEmptyElement<string>(reader,
-                        reader.IsStartElement(Elements.EndpointReference, Namespaces.AddressingNamspace),
-                        Elements.EndpointReference);
-                    if (invalidOrEmptyElementForEndpointReference.Handled)
+                    var invalidOrEmptyElementForEndpointReference = HandleIncorrectAndEmptyElement<string>(reader, Elements.EndpointReference);
+                    if (invalidOrEmptyElementForEndpointReference.Exists)
                         continue;
 
                     // <EndpointReference>
@@ -272,13 +262,11 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
 
                     while (reader.IsStartElement())
                     {
-                        // check invalid or empty <Address>
-                        if (reader.IsStartElement(Elements.Address, Namespaces.AddressingNamspace))
+                        if (reader.IsStartElement(Elements.Address, ElementNamespacePair[Elements.Address]))
                         {
-                            var invalidOrEmptyElementForAddress = HandleIncorrectAndEmptyElement<string>(reader,
-                                reader.IsStartElement(Elements.Address, Namespaces.AddressingNamspace),
-                                Elements.Address);
-                            if (invalidOrEmptyElementForAddress.Handled)
+                            // check invalid or empty <Address>
+                            var invalidOrEmptyElementForAddress = HandleIncorrectAndEmptyElement<string>(reader, Elements.Address);
+                            if (invalidOrEmptyElementForAddress.Exists)
                                 continue;
 
                             // <Address>
@@ -317,9 +305,9 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
             return tokenEndpoint;
         }
 
-        private bool IsSecurityTokenServiceTypeRoleDescriptor(XmlReader reader)
+        private static bool IsSecurityTokenServiceTypeRoleDescriptor(XmlReader reader)
         {
-            if (reader == null || !reader.IsStartElement(Elements.RoleDescriptor, Namespaces.MetadataNamespace))
+            if (reader == null || !reader.IsStartElement(Elements.RoleDescriptor, ElementNamespacePair[Elements.RoleDescriptor]))
                 return false;
 
             var type = reader.GetAttribute(Attributes.Type, XmlSignatureConstants.XmlSchemaNamespace);
@@ -343,49 +331,66 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
             return stringToTrim.Trim(charsToTrim);
         }
 
-        internal static ElementResult<T> HandleIncorrectAndEmptyElement<T>(XmlReader reader, bool isExpectedElement, string expectedElement)
+        internal static ElementResult<T> HandleIncorrectAndEmptyElement<T>(XmlReader reader, string element)
         {
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
             var result = new ElementResult<T>();
 
-            if (!isExpectedElement)
+            if (!ElementNamespacePair.ContainsKey(element))
+                throw new WsFederationException($"{element} is not registered in {nameof(ElementNamespacePair)}.");
+
+            // check invalid element
+            if (!reader.IsStartElement(element, ElementNamespacePair[element]))
             {
-                Logger.WriteWarning(expectedElement + " is expected");
+                Logger.WriteWarning($"Element '{element}' and namespace '{ElementNamespacePair[element]}' are expected, current element and namespace are '{reader.Name}', '{reader.NamespaceURI}'");
                 return result;
             }
 
+            // additional check for KeyDescriptor and RoleDescriptor
+            if (element.Equals(Elements.RoleDescriptor) && !IsSecurityTokenServiceTypeRoleDescriptor(reader))
+            {
+                Logger.WriteWarning("SecurityTokenService type RoleDescriptor is expected.");
+                return result;
+            }
+            else if (element.Equals(Elements.KeyDescriptor) && !keyUse.Signing.Equals(reader.GetAttribute(Attributes.Use)))
+            {
+                Logger.WriteWarning("KeyDescriptor with signing key use is expected.");
+                return result;
+            }
+
+            // check empty element
             if (reader.IsEmptyElement)
             {
-                Logger.WriteWarning(expectedElement + " is an empty element");
-                if (Elements.EntityDescriptor.Equals(expectedElement))
+                Logger.WriteWarning($"Current element '{element}' is an empty element.");
+                if (Elements.EntityDescriptor.Equals(element))
                 {
                     var issuer = reader.GetAttribute(Attributes.EntityId);
                     if (string.IsNullOrEmpty(issuer))
                         Logger.WriteWarning(LogMessages.IDX22801);
-                    (result.Result as WsFederationConfiguration).Issuer = issuer;
+                    (result.ResultObject as WsFederationConfiguration).Issuer = issuer;
                 }
                 reader.ReadStartElement();
                 reader.MoveToContent();
                 return result;
             }
 
-            result.Handled = false;
+            result.Exists = false;
             return result;
         }
 
         internal class ElementResult<T>
         {
-            public bool Handled;
-            public T Result;
+            public bool Exists;
+            public T ResultObject;
             public ElementResult()
             {
-                Handled = false;
+                Exists = false;
                 if (typeof(string) == typeof(T))
-                    Result = default(T);
+                    ResultObject = default(T);
                 else
-                    Result = (T)Activator.CreateInstance(typeof(T));
+                    ResultObject = (T)Activator.CreateInstance(typeof(T));
             }
         }
 
@@ -449,10 +454,10 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
             writer.WriteStartElement(Elements.PassiveRequestorEndpoint, Namespaces.FederationNamespace);
 
             // <wsa:EndpointReference xmlns:wsa=""http://www.w3.org/2005/08/addressing"">
-            writer.WriteStartElement(Prefixes.Wsa, Elements.EndpointReference, Namespaces.AddressingNamspace);
+            writer.WriteStartElement(Prefixes.Wsa, Elements.EndpointReference, Namespaces.AddressingNamespace);
 
             // <wsa:Address>
-            writer.WriteStartElement(Elements.Address, Namespaces.AddressingNamspace);
+            writer.WriteStartElement(Elements.Address, Namespaces.AddressingNamespace);
 
             // write TokenEndpoint
             writer.WriteString(configuration.TokenEndpoint);
