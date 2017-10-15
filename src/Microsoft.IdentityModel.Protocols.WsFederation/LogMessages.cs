@@ -44,6 +44,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         internal const string IDX22901 = "IDX22901: Building wsfederation message from uri: '{0}'.";
         internal const string IDX22902 = "IDX22902: Token is not found in wresult";
         internal const string IDX22903 = "IDX22903: Multiple tokens were found in the RequestSecurityTokenCollection. Only a single token is supported.";
+        internal const string IDX22904 = "IDX22904: Element '{0}' is not registered in ElementNamespacePair";
 
         // xml metadata messages
         internal const string IDX22800 = "IDX22800: Exception thrown while reading WsFedereationMetadata. Element '{0}'. Caught exception: '{1}'.";
@@ -51,13 +52,14 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         internal const string IDX22802 = "IDX22802: Current name '{0} and namespace '{1}' do not match the expected name '{2}' and namespace '{3}'.";
         internal const string IDX22803 = "IDX22803: Token reference address is missing in SecurityTokenServiceEndpoint in metadata file.";
         internal const string IDX22804 = "IDX22804: Security token type role descriptor is expected.";
+        internal const string IDX22805 = "IDX22805: Current element '{0}' is an empty element.";
         internal const string IDX22806 = "IDX22806: Key descriptor for signing is missing in security token service type RoleDescriptor.";
         internal const string IDX22807 = "IDX22807: Token endpoint is missing in security token service type RoleDescriptor.";
         internal const string IDX22808 = "IDX22808: 'Use' attribute is missing in KeyDescriptor.";
         internal const string IDX22809 = "IDX22809: The expected value for attribute '{0}' is '{1}', but the current one is '{2}'.";
         internal const string IDX22810 = "IDX22810: 'Issuer' value is missing in wsfederationconfiguration.";
         internal const string IDX22811 = "IDX22811: 'TokenEndpoint' value is missing in wsfederationconfiguration.";
-
+        
 #pragma warning restore 1591
     }
 }

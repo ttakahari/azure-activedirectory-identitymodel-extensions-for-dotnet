@@ -92,8 +92,8 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
 
             // check invalid or empty <EntityDescriptor>
             var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<WsFederationConfiguration>(reader, Elements.EntityDescriptor);
-            if (invalidOrEmptyElement.Exists)
-                return invalidOrEmptyElement.ResultObject; // we cannot simply return a new WsFederationConfiguration instance, since an empty element can have issuer.
+            if (invalidOrEmptyElement.InvalidOrEmptyElementExists)
+                return invalidOrEmptyElement.ObjectCreatedFromReadingXML; // we cannot simply return a new WsFederationConfiguration instance, since an empty element can have issuer.
 
             var configuration = new WsFederationConfiguration();
 
@@ -161,8 +161,12 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
 
             // check invalid or empty <KeyDescriptor>
             var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<KeyInfo>(reader, Elements.KeyDescriptor);
-            if (invalidOrEmptyElement.Exists)
-                return invalidOrEmptyElement.ResultObject;
+            if (invalidOrEmptyElement.InvalidOrEmptyElementExists)
+                return invalidOrEmptyElement.ObjectCreatedFromReadingXML;
+
+            // it is ok if we don't have a 'use' attribute
+            if (string.IsNullOrEmpty(reader.GetAttribute(Attributes.Use)))
+                Logger.WriteWarning(LogMessages.IDX22808);
 
             var keyInfo = new KeyInfo();
             
@@ -198,7 +202,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
 
             // check invalid or empty <RoleDescriptor>
             var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<SecurityTokenServiceTypeRoleDescriptor>(reader, Elements.RoleDescriptor);
-            if (invalidOrEmptyElement.Exists)
+            if (invalidOrEmptyElement.InvalidOrEmptyElementExists)
                 return roleDescriptor;           
 
             // <RoleDescriptor>
@@ -238,7 +242,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
 
             // check invalid or empty <PassiveRequestorEndpoint>
             var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<string>(reader, Elements.PassiveRequestorEndpoint);
-            if (invalidOrEmptyElement.Exists)
+            if (invalidOrEmptyElement.InvalidOrEmptyElementExists)
                 return null;
 
             string tokenEndpoint = null;
@@ -253,7 +257,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
                 {
                     // check invalid or empty <EndpointReference>
                     var invalidOrEmptyElementForEndpointReference = HandleIncorrectAndEmptyElement<string>(reader, Elements.EndpointReference);
-                    if (invalidOrEmptyElementForEndpointReference.Exists)
+                    if (invalidOrEmptyElementForEndpointReference.InvalidOrEmptyElementExists)
                         continue;
 
                     // <EndpointReference>
@@ -266,7 +270,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
                         {
                             // check invalid or empty <Address>
                             var invalidOrEmptyElementForAddress = HandleIncorrectAndEmptyElement<string>(reader, Elements.Address);
-                            if (invalidOrEmptyElementForAddress.Exists)
+                            if (invalidOrEmptyElementForAddress.InvalidOrEmptyElementExists)
                                 continue;
 
                             // <Address>
@@ -331,66 +335,69 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
             return stringToTrim.Trim(charsToTrim);
         }
 
-        internal static ElementResult<T> HandleIncorrectAndEmptyElement<T>(XmlReader reader, string element)
+        internal static InvalidOrEmptyElementCheckResult<T> HandleIncorrectAndEmptyElement<T>(XmlReader reader, string element)
         {
             if (reader == null)
                 throw new ArgumentNullException(nameof(reader));
 
-            var result = new ElementResult<T>();
+            var result = new InvalidOrEmptyElementCheckResult<T>();
 
             if (!ElementNamespacePair.ContainsKey(element))
-                throw new WsFederationException($"{element} is not registered in {nameof(ElementNamespacePair)}.");
+                throw new WsFederationException(FormatInvariant(LogMessages.IDX22904, element));
 
             // check invalid element
             if (!reader.IsStartElement(element, ElementNamespacePair[element]))
             {
-                Logger.WriteWarning($"Element '{element}' and namespace '{ElementNamespacePair[element]}' are expected, current element and namespace are '{reader.Name}', '{reader.NamespaceURI}'");
+                Logger.WriteWarning(FormatInvariant(LogMessages.IDX22802, reader.Name, reader.NamespaceURI, element, ElementNamespacePair[element]));
                 return result;
             }
 
             // additional check for KeyDescriptor and RoleDescriptor
             if (element.Equals(Elements.RoleDescriptor) && !IsSecurityTokenServiceTypeRoleDescriptor(reader))
             {
-                Logger.WriteWarning("SecurityTokenService type RoleDescriptor is expected.");
+                Logger.WriteWarning(LogMessages.IDX22804);
                 return result;
             }
-            else if (element.Equals(Elements.KeyDescriptor) && !keyUse.Signing.Equals(reader.GetAttribute(Attributes.Use)))
+            else if (element.Equals(Elements.KeyDescriptor) && !string.IsNullOrEmpty(reader.GetAttribute(Attributes.Use)) && !keyUse.Signing.Equals(reader.GetAttribute(Attributes.Use)))
             {
-                Logger.WriteWarning("KeyDescriptor with signing key use is expected.");
+                // if key use exists, it should be 'signing'.
+                Logger.WriteWarning(FormatInvariant(LogMessages.IDX22809, Attributes.Use, keyUse.Signing, reader.GetAttribute(Attributes.Use)));
                 return result;
             }
 
             // check empty element
             if (reader.IsEmptyElement)
             {
-                Logger.WriteWarning($"Current element '{element}' is an empty element.");
+                Logger.WriteWarning(FormatInvariant(LogMessages.IDX22805, element));
                 if (Elements.EntityDescriptor.Equals(element))
                 {
                     var issuer = reader.GetAttribute(Attributes.EntityId);
                     if (string.IsNullOrEmpty(issuer))
                         Logger.WriteWarning(LogMessages.IDX22801);
-                    (result.ResultObject as WsFederationConfiguration).Issuer = issuer;
+                    (result.ObjectCreatedFromReadingXML as WsFederationConfiguration).Issuer = issuer;
                 }
                 reader.ReadStartElement();
                 reader.MoveToContent();
                 return result;
             }
 
-            result.Exists = false;
+            result.InvalidOrEmptyElementExists = false;
             return result;
         }
 
-        internal class ElementResult<T>
+        internal class InvalidOrEmptyElementCheckResult<T>
         {
-            public bool Exists;
-            public T ResultObject;
-            public ElementResult()
+            public bool InvalidOrEmptyElementExists;
+
+            public T ObjectCreatedFromReadingXML;
+
+            public InvalidOrEmptyElementCheckResult()
             {
-                Exists = false;
+                InvalidOrEmptyElementExists = true;
                 if (typeof(string) == typeof(T))
-                    ResultObject = default(T);
+                    ObjectCreatedFromReadingXML = default(T);
                 else
-                    ResultObject = (T)Activator.CreateInstance(typeof(T));
+                    ObjectCreatedFromReadingXML = (T)Activator.CreateInstance(typeof(T));
             }
         }
 
