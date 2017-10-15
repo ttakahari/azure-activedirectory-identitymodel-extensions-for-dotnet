@@ -158,28 +158,33 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
         /// <exception cref="XmlReadException">if error occurs when reading key descriptor</exception>
         protected virtual KeyInfo ReadKeyDescriptorForSigning(XmlReader reader)
         {
-            XmlUtil.CheckReaderOnEntry(reader, Elements.KeyDescriptor, Namespaces.MetadataNamespace);
+            if (reader == null)
+                throw LogArgumentNullException(nameof(reader));
 
-            var use = reader.GetAttribute(Attributes.Use);
-            if (string.IsNullOrEmpty(use))
-                Logger.WriteWarning(LogMessages.IDX22808);
-            else if (!use.Equals(keyUse.Signing))
-                throw XmlUtil.LogReadException(LogMessages.IDX22809, Attributes.Use, keyUse.Signing, use);
+            // check invalid or empty <KeyDescriptor>
+            var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<KeyInfo>(reader,
+                reader.IsStartElement(Elements.KeyDescriptor, Namespaces.MetadataNamespace) && keyUse.Signing.Equals(reader.GetAttribute(Attributes.Use)),
+                Elements.KeyDescriptor);
+            if (invalidOrEmptyElement.Handled)
+                return invalidOrEmptyElement.Result;
 
+            var keyInfo = new KeyInfo();
+            
             // <KeyDescriptor>
             reader.ReadStartElement();
 
-            if (reader.IsStartElement(XmlSignatureConstants.Elements.KeyInfo, XmlSignatureConstants.Namespace))
+            while (reader.IsStartElement())
             {
-                var keyInfo = _dsigSerializer.ReadKeyInfo(reader);
-                // </KeyDescriptor>
-                reader.ReadEndElement();
-                return keyInfo;
+                if (reader.IsStartElement(XmlSignatureConstants.Elements.KeyInfo, XmlSignatureConstants.Namespace))
+                    keyInfo = _dsigSerializer.ReadKeyInfo(reader);
+                else
+                    reader.ReadOuterXml();
             }
-            else
-            {
-                throw XmlUtil.LogReadException(LogMessages.IDX22802, reader.LocalName, reader.NamespaceURI, XmlSignatureConstants.Elements.KeyInfo, XmlSignatureConstants.Namespace);
-            }
+
+            // </KeyDescriptor>
+            reader.ReadEndElement();
+
+            return keyInfo;
         }
 
         /// <summary>
@@ -197,7 +202,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
 
             // check invalid or empty <RoleDescriptor>
             var invalidOrEmptyElement = HandleIncorrectAndEmptyElement<SecurityTokenServiceTypeRoleDescriptor>(reader,
-                IsSecurityTokenServiceTypeRoleDescriptor, 
+                IsSecurityTokenServiceTypeRoleDescriptor(reader), 
                 Elements.RoleDescriptor);
             if (invalidOrEmptyElement.Handled)
                 return roleDescriptor;           
@@ -206,7 +211,7 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
             reader.ReadStartElement();
             while (reader.IsStartElement())
             {
-                if (reader.IsStartElement(Elements.KeyDescriptor, Namespaces.MetadataNamespace) && reader.GetAttribute(Attributes.Use).Equals(keyUse.Signing))
+                if (reader.IsStartElement(Elements.KeyDescriptor, Namespaces.MetadataNamespace) && keyUse.Signing.Equals(reader.GetAttribute(Attributes.Use)))
                     roleDescriptor.KeyInfos.Add(ReadKeyDescriptorForSigning(reader));
                 else if (reader.IsStartElement(Elements.PassiveRequestorEndpoint, Namespaces.FederationNamespace))
                     roleDescriptor.TokenEndpoint = ReadPassiveRequestorEndpoint(reader);
@@ -369,16 +374,6 @@ namespace Microsoft.IdentityModel.Protocols.WsFederation
             result.Handled = false;
             return result;
         }
-
-        internal static ElementResult<T> HandleIncorrectAndEmptyElement<T>(XmlReader reader, CheckElementDelegate checkElement, string expectedElement) where T : new()
-        {
-            if (reader == null)
-                throw new ArgumentNullException(nameof(reader));
-
-            return HandleIncorrectAndEmptyElement<T>(reader, checkElement(reader), expectedElement);
-        }
-
-        internal delegate bool CheckElementDelegate(XmlReader reader);
 
         internal class ElementResult<T>
         {
