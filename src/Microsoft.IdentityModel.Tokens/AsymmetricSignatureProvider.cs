@@ -39,14 +39,13 @@ namespace Microsoft.IdentityModel.Tokens
     {
 #if NETSTANDARD1_4
         private ECDsa _ecdsa;
-        private HashAlgorithmName _hashAlgorithm;
-        private RSA _rsa;
+        private HashAlgorithmName _hashAlgorithm;        
 #else
         private ECDsaCng _ecdsa;
         private string _hashAlgorithm;
-        private RSACryptoServiceProvider _rsaCryptoServiceProvider;
         private RSACryptoServiceProviderProxy _rsaCryptoServiceProviderProxy;
 #endif
+        private RSA _rsa;
         private bool _disposeRsa;
         private bool _disposeEcdsa;
         private bool _disposed;
@@ -279,9 +278,9 @@ namespace Microsoft.IdentityModel.Tokens
             RsaAlgorithm rsaAlgorithm = Utility.ResolveRsaAlgorithm(key, algorithm, willCreateSignatures);
             if (rsaAlgorithm != null)
             {
-                if (rsaAlgorithm.rsaCryptoServiceProvider != null)
+                if (rsaAlgorithm.rsa != null)
                 {
-                    _rsaCryptoServiceProvider = rsaAlgorithm.rsaCryptoServiceProvider;
+                    _rsa = rsaAlgorithm.rsa;
                     _disposeRsa = rsaAlgorithm.dispose;
                     return;
                 }
@@ -332,8 +331,8 @@ namespace Microsoft.IdentityModel.Tokens
             else if (_ecdsa != null)
                 return _ecdsa.SignData(input, _hashAlgorithm);
 #else
-            if (_rsaCryptoServiceProvider != null)
-                return _rsaCryptoServiceProvider.SignData(input, _hashAlgorithm);
+            if (_rsa != null)
+                return MethodInAssembly.SignData(_rsa, input, _hashAlgorithm);
             else if (_rsaCryptoServiceProviderProxy != null)
                 return _rsaCryptoServiceProviderProxy.SignData(input, _hashAlgorithm);
             else if (_ecdsa != null)
@@ -372,8 +371,8 @@ namespace Microsoft.IdentityModel.Tokens
             else if (_ecdsa != null)
                 return _ecdsa.VerifyData(input, signature, _hashAlgorithm);
 #else
-            if (_rsaCryptoServiceProvider != null)
-                return _rsaCryptoServiceProvider.VerifyData(input, _hashAlgorithm, signature);
+            if (_rsa != null)
+                return MethodInAssembly.VerifyData(_rsa, input, signature, _hashAlgorithm);
             else if (_rsaCryptoServiceProviderProxy != null)
                 return _rsaCryptoServiceProviderProxy.VerifyData(input, _hashAlgorithm, signature);
             else if (_ecdsa != null)
@@ -413,15 +412,13 @@ namespace Microsoft.IdentityModel.Tokens
                 if (disposing)
                 {
 #if NETSTANDARD1_4
-                    if (_rsa != null && _disposeRsa)
-                        _rsa.Dispose();
 #else
-                    if (_rsaCryptoServiceProvider != null && _disposeRsa)
-                        _rsaCryptoServiceProvider.Dispose();
-
                     if (_rsaCryptoServiceProviderProxy != null)
                         _rsaCryptoServiceProviderProxy.Dispose();
 #endif
+                    if (_rsa != null && _disposeRsa)
+                        _rsa.Dispose();
+
                     if (_ecdsa != null && _disposeEcdsa)
                         _ecdsa.Dispose();
                 }

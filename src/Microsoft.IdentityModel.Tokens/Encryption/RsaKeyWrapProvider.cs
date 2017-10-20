@@ -36,12 +36,11 @@ namespace Microsoft.IdentityModel.Tokens
     /// </summary>
     public class RsaKeyWrapProvider : KeyWrapProvider
     {
-#if NETSTANDARD1_4
-        private RSA _rsa;
+#if NETSTANDARD1_4     
 #else
-        private RSACryptoServiceProvider _rsaCryptoServiceProvider;
         private RSACryptoServiceProviderProxy _rsaCryptoServiceProviderProxy;
 #endif
+        private RSA _rsa;
         private bool _disposeRsa;
         private bool _disposed = false;
 
@@ -73,22 +72,9 @@ namespace Microsoft.IdentityModel.Tokens
             var rsaAlgorithm = Utility.ResolveRsaAlgorithm(key, algorithm, willUnwrap);
 
 #if NETSTANDARD1_4
-            if (rsaAlgorithm != null && rsaAlgorithm.rsa != null)
-            {
-                _rsa = rsaAlgorithm.rsa;
-                _disposeRsa = rsaAlgorithm.dispose;
-                return;
-            }
 #else
             if (rsaAlgorithm != null)
             {
-                if (rsaAlgorithm.rsaCryptoServiceProvider != null)
-                {
-                    _rsaCryptoServiceProvider = rsaAlgorithm.rsaCryptoServiceProvider;
-                    _disposeRsa = rsaAlgorithm.dispose;
-                    return;
-                }
-
                 if (rsaAlgorithm.rsaCryptoServiceProviderProxy != null)
                 {
                     _rsaCryptoServiceProviderProxy = rsaAlgorithm.rsaCryptoServiceProviderProxy;
@@ -97,6 +83,13 @@ namespace Microsoft.IdentityModel.Tokens
                 }
             }
 #endif
+            if (rsaAlgorithm != null && rsaAlgorithm.rsa != null)
+            {
+                _rsa = rsaAlgorithm.rsa;
+                _disposeRsa = rsaAlgorithm.dispose;
+                return;
+            }
+
             throw LogHelper.LogExceptionMessage(new NotSupportedException(LogHelper.FormatInvariant(LogMessages.IDX10661, algorithm, key)));
         }
 
@@ -127,15 +120,13 @@ namespace Microsoft.IdentityModel.Tokens
                 if (disposing)
                 {
 #if NETSTANDARD1_4
-                    if (_rsa != null && _disposeRsa)
-                        _rsa.Dispose();
 #else
-                    if (_rsaCryptoServiceProvider != null && _disposeRsa)
-                        _rsaCryptoServiceProvider.Dispose();
-
                     if (_rsaCryptoServiceProviderProxy != null)
                         _rsaCryptoServiceProviderProxy.Dispose();
 #endif
+                    if (_rsa != null && _disposeRsa)
+                        _rsa.Dispose();
+
                     _disposed = true;
                 }
             }
@@ -170,13 +161,9 @@ namespace Microsoft.IdentityModel.Tokens
                 var x509Key = key as X509SecurityKey;
                 if (x509Key != null)
                 {
-#if NETSTANDARD1_4
-                    if (x509Key.PublicKey as RSA != null)
+                    if (x509Key.PublicKey != null)
                         return true;
-#else
-                    if (x509Key.PublicKey as RSACryptoServiceProvider != null)
-                        return true;
-#endif
+
                     return false;
                 }
 
@@ -224,8 +211,8 @@ namespace Microsoft.IdentityModel.Tokens
                       || Algorithm.Equals(SecurityAlgorithms.RsaOaepKeyWrap, StringComparison.Ordinal);
             try
             {
-                if (_rsaCryptoServiceProvider != null)
-                    return _rsaCryptoServiceProvider.Decrypt(keyBytes, fOAEP);
+                if (_rsa != null)
+                    return MethodInAssembly.Decrypt(_rsa, keyBytes, fOAEP);
                 else if (_rsaCryptoServiceProviderProxy != null)
                     return _rsaCryptoServiceProviderProxy.Decrypt(keyBytes, fOAEP);
             }
@@ -273,8 +260,8 @@ namespace Microsoft.IdentityModel.Tokens
                       || Algorithm.Equals(SecurityAlgorithms.RsaOaepKeyWrap, StringComparison.Ordinal);
             try
             {
-                if (_rsaCryptoServiceProvider != null)
-                    return _rsaCryptoServiceProvider.Encrypt(keyBytes, fOAEP);
+                if (_rsa != null)
+                    return MethodInAssembly.Encrypt(_rsa, keyBytes, fOAEP);
                 else if (_rsaCryptoServiceProviderProxy != null)
                     return _rsaCryptoServiceProviderProxy.Encrypt(keyBytes, fOAEP);
             }

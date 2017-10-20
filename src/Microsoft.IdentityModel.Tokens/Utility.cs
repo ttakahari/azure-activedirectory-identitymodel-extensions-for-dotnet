@@ -58,12 +58,63 @@ namespace Microsoft.IdentityModel.Tokens
     internal class RsaAlgorithm
     {
 #if NETSTANDARD1_4
-        public RSA rsa;
 #else
-        public RSACryptoServiceProvider rsaCryptoServiceProvider;
         public RSACryptoServiceProviderProxy rsaCryptoServiceProviderProxy;
 #endif
+        public RSA rsa;
         public bool dispose;
+
+        public static RsaAlgorithm ResolveRsaAlgorithm(SecurityKey key, string algorithm, bool requirePrivateKey)
+        {
+            if (key == null)
+                return null;
+
+            var rsaAlgorithm = new RsaAlgorithm();
+            var rsaKey = key as RsaSecurityKey;
+            if (rsaKey != null)
+            {
+                if (rsaKey.Rsa != null)
+                {
+                    rsaAlgorithm.rsa = rsaKey.Rsa;
+                    return rsaAlgorithm;
+                }
+                else
+                {
+                    rsaAlgorithm.rsa = RSA.Create();
+                    rsaAlgorithm.rsa.ImportParameters(rsaKey.Parameters);
+                    rsaAlgorithm.dispose = true;
+                }
+
+                return rsaAlgorithm;
+            }
+
+            X509SecurityKey x509Key = key as X509SecurityKey;
+            if (x509Key != null)
+            {
+                if (requirePrivateKey)
+                {
+                    MethodInAssembly.SetPrivateKey(x509Key.Certificate, rsaAlgorithm);
+                }
+                else
+                {
+                    MethodInAssembly.SetPublicKey(x509Key.Certificate, rsaAlgorithm);
+                }
+                return rsaAlgorithm;
+            }
+
+            JsonWebKey webKey = key as JsonWebKey;
+            if (webKey != null && webKey.Kty == JsonWebAlgorithmsKeyTypes.RSA)
+            {
+                RSAParameters parameters = webKey.CreateRsaParameters();
+                rsaAlgorithm.rsa = RSA.Create();
+                rsaAlgorithm.dispose = true;
+                if (rsaAlgorithm.rsa != null)
+                    rsaAlgorithm.rsa.ImportParameters(parameters);
+                return rsaAlgorithm;
+            }
+
+            return null;
+        }
     }
 
     /// <summary>
@@ -354,73 +405,7 @@ namespace Microsoft.IdentityModel.Tokens
 
         internal static RsaAlgorithm ResolveRsaAlgorithm(SecurityKey key, string algorithm, bool requirePrivateKey)
         {
-            if (key == null)
-                return null;
-
-            var rsaAlgorithm = new RsaAlgorithm();
-            var rsaKey = key as RsaSecurityKey;
-            if (rsaKey != null)
-            {
-                if (rsaKey.Rsa != null)
-                {
-#if NETSTANDARD1_4
-                    rsaAlgorithm.rsa = rsaKey.Rsa;
-#else
-                    rsaAlgorithm.rsaCryptoServiceProvider = rsaKey.Rsa as RSACryptoServiceProvider;
-#endif
-                    return rsaAlgorithm;
-                }
-                else
-                {
-#if NETSTANDARD1_4
-                    rsaAlgorithm.rsa = RSA.Create();
-                    rsaAlgorithm.rsa.ImportParameters(rsaKey.Parameters);
-                    rsaAlgorithm.dispose = true;
-#else
-                    rsaAlgorithm.rsaCryptoServiceProvider = new RSACryptoServiceProvider();
-                    (rsaAlgorithm.rsaCryptoServiceProvider as RSA).ImportParameters(rsaKey.Parameters);
-                    rsaAlgorithm.dispose = true;
-#endif
-                }
-
-                return rsaAlgorithm;
-            }
-
-            X509SecurityKey x509Key = key as X509SecurityKey;
-            if (x509Key != null)
-            {
-#if NETSTANDARD1_4
-                if (requirePrivateKey)
-                    rsaAlgorithm.rsa = x509Key.PrivateKey as RSA;
-                else
-                    rsaAlgorithm.rsa = x509Key.PublicKey as RSA;
-#else
-                if (requirePrivateKey)
-                    rsaAlgorithm.rsaCryptoServiceProviderProxy = new RSACryptoServiceProviderProxy(x509Key.PrivateKey as RSACryptoServiceProvider);
-                else
-                    rsaAlgorithm.rsaCryptoServiceProviderProxy = new RSACryptoServiceProviderProxy(x509Key.PublicKey as RSACryptoServiceProvider);
-#endif
-                return rsaAlgorithm;
-            }
-
-            JsonWebKey webKey = key as JsonWebKey;
-            if (webKey != null && webKey.Kty == JsonWebAlgorithmsKeyTypes.RSA)
-            {
-#if NETSTANDARD1_4
-                RSAParameters parameters = webKey.CreateRsaParameters();
-                rsaAlgorithm.rsa = RSA.Create();
-                rsaAlgorithm.dispose = true;
-                if (rsaAlgorithm.rsa != null)
-                    rsaAlgorithm.rsa.ImportParameters(parameters);
-#else
-                RSAParameters parameters = webKey.CreateRsaParameters();
-                rsaAlgorithm.rsaCryptoServiceProvider = new RSACryptoServiceProvider();
-                (rsaAlgorithm.rsaCryptoServiceProvider as RSA).ImportParameters(parameters);
-#endif
-                return rsaAlgorithm;
-            }
-
-            return null;
+            return RsaAlgorithm.ResolveRsaAlgorithm(key, algorithm, requirePrivateKey);
         }
 
         internal static bool ValidateECDSAKeySize(int keySize, string algorithm)
