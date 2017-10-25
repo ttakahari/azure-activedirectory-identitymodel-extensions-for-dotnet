@@ -64,19 +64,15 @@ namespace Microsoft.IdentityModel.Tokens
 
             if (ecdsaKey != null)
             {
+                if (ecdsaKey.ECDsa != null && ValidateECDSAKeySize(ecdsaKey.ECDsa.KeySize, algorithm))
+                {
 #if NETSTANDARD1_4
-                if (ecdsaKey.ECDsa != null && ValidateECDSAKeySize(ecdsaKey.ECDsa.KeySize, algorithm))
-                {
                     ecdsaAlgorithm.ecdsa = ecdsaKey.ECDsa;
-                    return ecdsaAlgorithm;
-                }
-#else // net451 windows
-                if (ecdsaKey.ECDsa != null && ValidateECDSAKeySize(ecdsaKey.ECDsa.KeySize, algorithm))
-                {
+#else
                     ecdsaAlgorithm.ecdsaCng = ecdsaKey.ECDsa as ECDsaCng;
+#endif
                     return ecdsaAlgorithm;
                 }
-#endif
             }
 
             var webKey = key as JsonWebKey;
@@ -105,8 +101,7 @@ namespace Microsoft.IdentityModel.Tokens
 
     internal class RsaAlgorithm
     {
-#if NETSTANDARD1_4
-#else
+#if (NET45 || NET451)
         public RSACryptoServiceProviderProxy rsaCryptoServiceProviderProxy;
 #endif
         public RSA rsa;
