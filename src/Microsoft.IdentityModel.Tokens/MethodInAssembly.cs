@@ -21,9 +21,25 @@ namespace Microsoft.IdentityModel.Tokens
 
         private static bool _delegateSet = false;
 
-#if (NET45 || NET451 || NET452 || NET46)
+#if NETSTANDARD1_4
+        private static HashAlgorithmName GetHashAlgorithmname(string algorithm)
+        {
+            switch (algorithm)
+            {
+                case SecurityAlgorithms.Sha256:
+                    return HashAlgorithmName.SHA256;
+                case SecurityAlgorithms.Sha384:
+                    return HashAlgorithmName.SHA384;
+                case SecurityAlgorithms.Sha512:
+                    return HashAlgorithmName.SHA512;
+            }
+            throw new Exception("some");
+        }
+#endif
+
         public static byte[] SignData(RSA rsa, byte[] data, string algorithm)
         {
+#if (NET45 || NET451)
             Assembly mscorlibAssembly = null;
             foreach (var assem in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -68,10 +84,14 @@ namespace Microsoft.IdentityModel.Tokens
             }
 
             return null;
+#else
+            return rsa.SignData(data, GetHashAlgorithmname(algorithm), RSASignaturePadding.Pkcs1);
+#endif
         }
 
         public static bool VerifyData(RSA rsa, byte[] data, byte[] signature, string algorithm)
         {
+#if (NET45 || NET451)
             Assembly mscorlibAssembly = null;
             foreach (var assem in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -109,10 +129,14 @@ namespace Microsoft.IdentityModel.Tokens
             }
 
             return false;
+#else
+            return rsa.VerifyData(data, signature, GetHashAlgorithmname(algorithm), RSASignaturePadding.Pkcs1);
+#endif
         }
 
         public static byte[] Decrypt(RSA rsa, byte[] data, bool fOAEP)
         {
+#if (NET45 || NET451)
             Assembly mscorlibAssembly = null;
             foreach (var assem in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -137,10 +161,17 @@ namespace Microsoft.IdentityModel.Tokens
             }
 
             return null;
+#else
+            if (fOAEP)
+                return rsa.Decrypt(data, RSAEncryptionPadding.OaepSHA1);
+            else
+                return rsa.Decrypt(data, RSAEncryptionPadding.Pkcs1);
+#endif
         }
 
         public static byte[] Encrypt(RSA rsa, byte[] data, bool fOAEP)
         {
+#if (NET45 || NET451)
             Assembly mscorlibAssembly = null;
             foreach (var assem in AppDomain.CurrentDomain.GetAssemblies())
             {
@@ -165,8 +196,14 @@ namespace Microsoft.IdentityModel.Tokens
             }
 
             return null;
-        }
+#else
+            if (fOAEP)
+                return rsa.Encrypt(data, RSAEncryptionPadding.OaepSHA1);
+            else
+                return rsa.Encrypt(data, RSAEncryptionPadding.Pkcs1);
 #endif
+        }
+
         private static void SetDelegate()
         {
             if (_delegateSet)
