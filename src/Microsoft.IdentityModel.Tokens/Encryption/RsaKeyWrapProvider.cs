@@ -191,7 +191,7 @@ namespace Microsoft.IdentityModel.Tokens
             try
             {
                 if (_rsa != null)
-                    return MethodInAssembly.Decrypt(_rsa, keyBytes, fOAEP);
+                    return RunTimeMethodResolver.Decrypt(_rsa, keyBytes, fOAEP);
 #if (NET45 || NET451)
                 else if (_rsaCryptoServiceProviderProxy != null)
                     return _rsaCryptoServiceProviderProxy.Decrypt(keyBytes, fOAEP);
@@ -227,7 +227,7 @@ namespace Microsoft.IdentityModel.Tokens
             try
             {
                 if (_rsa != null)
-                    return MethodInAssembly.Encrypt(_rsa, keyBytes, fOAEP);
+                    return RunTimeMethodResolver.Encrypt(_rsa, keyBytes, fOAEP);
 #if (NET45 || NET451)
                 else if (_rsaCryptoServiceProviderProxy != null)
                     return _rsaCryptoServiceProviderProxy.Encrypt(keyBytes, fOAEP);

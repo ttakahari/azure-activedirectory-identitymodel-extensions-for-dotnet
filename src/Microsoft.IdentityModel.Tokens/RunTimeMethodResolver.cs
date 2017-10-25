@@ -5,7 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.IdentityModel.Tokens
 {
-    internal class MethodInAssembly
+    internal class RunTimeMethodResolver
     {
         public delegate AsymmetricAlgorithm GetKeyDelegateAsymmetricAlgorithm(X509Certificate2 certificate);
 
@@ -19,7 +19,7 @@ namespace Microsoft.IdentityModel.Tokens
 
         private static GetKeyDelegateRSA _getPublicKeyDelegateRSA = null;
 
-        private static bool _delegateSet = false;
+        private static bool _resolved = false;
 
 #if NETSTANDARD1_4
         private static HashAlgorithmName GetHashAlgorithmname(string algorithm)
@@ -223,12 +223,12 @@ namespace Microsoft.IdentityModel.Tokens
 #endif
         }
 
-        private static void SetDelegate()
+        private static void ResolveRunTime()
         {
-            if (_delegateSet)
+            if (_resolved)
                 return;
 
-            _delegateSet = true;
+            _resolved = true;
 
 #if (NET45 || NET451 || NET452 || NET46)
             Assembly systemCoreAssembly = null;
@@ -297,7 +297,7 @@ namespace Microsoft.IdentityModel.Tokens
 
         public static void SetPrivateKey(X509Certificate2 certificate, RsaAlgorithm rsaAlgorithm)
         {
-            SetDelegate();
+            ResolveRunTime();
 #if NETSTANDARD1_4
             rsaAlgorithm.rsa = _getPrivateKeyDelegateRSA(certificate);
 #else
@@ -310,7 +310,7 @@ namespace Microsoft.IdentityModel.Tokens
 
         public static void SetPublicKey(X509Certificate2 certificate, RsaAlgorithm rsaAlgorithm)
         {
-            SetDelegate();
+            ResolveRunTime();
 #if NETSTANDARD1_4
             rsaAlgorithm.rsa = _getPublicKeyDelegateRSA(certificate);
 #else
@@ -323,7 +323,7 @@ namespace Microsoft.IdentityModel.Tokens
 
         public static AsymmetricAlgorithm GetPrivateKey(X509Certificate2 certificate)
         {
-            SetDelegate();
+            ResolveRunTime();
             if (_getPrivateKeyDelegateRSA != null)
                 return _getPrivateKeyDelegateRSA(certificate) as AsymmetricAlgorithm;
             else
@@ -332,7 +332,7 @@ namespace Microsoft.IdentityModel.Tokens
 
         public static AsymmetricAlgorithm GetPublicKey(X509Certificate2 certificate)
         {
-            SetDelegate();
+            ResolveRunTime();
             if (_getPublicKeyDelegateRSA != null)
                 return _getPublicKeyDelegateRSA(certificate) as AsymmetricAlgorithm;
             else

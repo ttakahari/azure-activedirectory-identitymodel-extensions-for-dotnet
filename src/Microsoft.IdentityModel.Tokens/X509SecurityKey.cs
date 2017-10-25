@@ -85,7 +85,7 @@ namespace Microsoft.IdentityModel.Tokens
                     {
                         if (!_privateKeyAvailabilityDetermined)
                         {
-                            _privateKey = MethodInAssembly.GetPrivateKey(_certificate);
+                            _privateKey = RunTimeMethodResolver.GetPrivateKey(_certificate);
                             _privateKeyAvailabilityDetermined = true;
                         }
                     }
@@ -108,7 +108,7 @@ namespace Microsoft.IdentityModel.Tokens
                     {
                         if (_publicKey == null)
                         {
-                            _publicKey = MethodInAssembly.GetPublicKey(_certificate);
+                            _publicKey = RunTimeMethodResolver.GetPublicKey(_certificate);
                         }
                     }
                 }

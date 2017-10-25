@@ -270,9 +270,9 @@ namespace Microsoft.IdentityModel.Tokens
                 throw LogHelper.LogExceptionMessage(new ObjectDisposedException(GetType().ToString()));
 
             if (_rsa != null)
-                return MethodInAssembly.SignData(_rsa, input, _hashAlgorithm);
+                return RunTimeMethodResolver.SignData(_rsa, input, _hashAlgorithm);
             else if (_ecdsa != null)
-                return MethodInAssembly.SignData(_ecdsa, input, _hashAlgorithm);
+                return RunTimeMethodResolver.SignData(_ecdsa, input, _hashAlgorithm);
 #if (NET45 || NET451)
             else if (_rsaCryptoServiceProviderProxy != null)
                 return _rsaCryptoServiceProviderProxy.SignData(input, _hashAlgorithm);
@@ -306,9 +306,9 @@ namespace Microsoft.IdentityModel.Tokens
                 throw LogHelper.LogExceptionMessage(new ObjectDisposedException(GetType().ToString()));
 
             if (_rsa != null)
-                return MethodInAssembly.VerifyData(_rsa, input, signature, _hashAlgorithm);
+                return RunTimeMethodResolver.VerifyData(_rsa, input, signature, _hashAlgorithm);
             else if (_ecdsa != null)
-                return MethodInAssembly.VerifyData(_ecdsa, input, signature, _hashAlgorithm);
+                return RunTimeMethodResolver.VerifyData(_ecdsa, input, signature, _hashAlgorithm);
 #if (NET45 || NEt451)
             else if (_rsaCryptoServiceProviderProxy != null)
                 return _rsaCryptoServiceProviderProxy.VerifyData(input, _hashAlgorithm, signature);

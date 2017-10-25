@@ -136,11 +136,11 @@ namespace Microsoft.IdentityModel.Tokens
             {
                 if (requirePrivateKey)
                 {
-                    MethodInAssembly.SetPrivateKey(x509Key.Certificate, rsaAlgorithm);
+                    RunTimeMethodResolver.SetPrivateKey(x509Key.Certificate, rsaAlgorithm);
                 }
                 else
                 {
-                    MethodInAssembly.SetPublicKey(x509Key.Certificate, rsaAlgorithm);
+                    RunTimeMethodResolver.SetPublicKey(x509Key.Certificate, rsaAlgorithm);
                 }
                 return rsaAlgorithm;
             }
