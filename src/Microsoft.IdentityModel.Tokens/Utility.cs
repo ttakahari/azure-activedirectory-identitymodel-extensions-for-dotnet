@@ -53,6 +53,54 @@ namespace Microsoft.IdentityModel.Tokens
             { SecurityAlgorithms.EcdsaSha384Signature, 384 },
             { SecurityAlgorithms.EcdsaSha512Signature, 521 }
         };
+
+        public static ECDsaAlgorithm ResolveECDsaAlgorithm(SecurityKey key, string algorithm, bool usePrivateKey)
+        {
+            if (key == null)
+                return null;
+
+            var ecdsaAlgorithm = new ECDsaAlgorithm();
+            var ecdsaKey = key as ECDsaSecurityKey;
+
+            if (ecdsaKey != null)
+            {
+#if NETSTANDARD1_4
+                if (ecdsaKey.ECDsa != null && ValidateECDSAKeySize(ecdsaKey.ECDsa.KeySize, algorithm))
+                {
+                    ecdsaAlgorithm.ecdsa = ecdsaKey.ECDsa;
+                    return ecdsaAlgorithm;
+                }
+#else // net451 windows
+                if (ecdsaKey.ECDsa != null && ValidateECDSAKeySize(ecdsaKey.ECDsa.KeySize, algorithm))
+                {
+                    ecdsaAlgorithm.ecdsaCng = ecdsaKey.ECDsa as ECDsaCng;
+                    return ecdsaAlgorithm;
+                }
+#endif
+            }
+
+            var webKey = key as JsonWebKey;
+            if (webKey != null && webKey.Kty == JsonWebAlgorithmsKeyTypes.EllipticCurve)
+            {
+                ecdsaAlgorithm.dispose = true;
+#if NETSTANDARD1_4
+                ecdsaAlgorithm.ecdsa = webKey.CreateECDsa(algorithm, usePrivateKey);
+#else // net451 windows
+                ecdsaAlgorithm.ecdsaCng = webKey.CreateECDsa(algorithm, usePrivateKey);
+#endif
+                return ecdsaAlgorithm;
+            }
+
+            return null;
+        }
+
+        public static bool ValidateECDSAKeySize(int keySize, string algorithm)
+        {
+            if (ECDsaAlgorithm.DefaultECDsaKeySizeInBitsMap.ContainsKey(algorithm) && keySize == ECDsaAlgorithm.DefaultECDsaKeySizeInBitsMap[algorithm])
+                return true;
+
+            return false;
+        }
     }
 
     internal class RsaAlgorithm
@@ -361,59 +409,6 @@ namespace Microsoft.IdentityModel.Tokens
 
                 return result;
             }
-        }
-
-        internal static ECDsaAlgorithm ResolveECDsaAlgorithm(SecurityKey key, string algorithm, bool usePrivateKey)
-        {
-            if (key == null)
-                return null;
-
-            var ecdsaAlgorithm = new ECDsaAlgorithm();
-            var ecdsaKey = key as ECDsaSecurityKey;
-
-            if (ecdsaKey != null)
-            {
-#if NETSTANDARD1_4
-                if (ecdsaKey.ECDsa != null && ValidateECDSAKeySize(ecdsaKey.ECDsa.KeySize, algorithm))
-                {
-                    ecdsaAlgorithm.ecdsa = ecdsaKey.ECDsa;
-                    return ecdsaAlgorithm;
-                }
-#else // net451 windows
-                if (ecdsaKey.ECDsa != null && ValidateECDSAKeySize(ecdsaKey.ECDsa.KeySize, algorithm))
-                {
-                    ecdsaAlgorithm.ecdsaCng = ecdsaKey.ECDsa as ECDsaCng;
-                    return ecdsaAlgorithm;
-                }
-#endif
-            }
-
-            var webKey = key as JsonWebKey;
-            if (webKey != null && webKey.Kty == JsonWebAlgorithmsKeyTypes.EllipticCurve)
-            {
-                ecdsaAlgorithm.dispose = true;
-#if NETSTANDARD1_4
-                ecdsaAlgorithm.ecdsa = webKey.CreateECDsa(algorithm, usePrivateKey);
-#else // net451 windows
-                ecdsaAlgorithm.ecdsaCng = webKey.CreateECDsa(algorithm, usePrivateKey);
-#endif
-                return ecdsaAlgorithm;
-            }
-
-            return null;
-        }
-
-        internal static RsaAlgorithm ResolveRsaAlgorithm(SecurityKey key, string algorithm, bool requirePrivateKey)
-        {
-            return RsaAlgorithm.ResolveRsaAlgorithm(key, algorithm, requirePrivateKey);
-        }
-
-        internal static bool ValidateECDSAKeySize(int keySize, string algorithm)
-        {
-            if (ECDsaAlgorithm.DefaultECDsaKeySizeInBitsMap.ContainsKey(algorithm) && keySize == ECDsaAlgorithm.DefaultECDsaKeySizeInBitsMap[algorithm])
-                return true;
-
-            return false;
         }
 
         internal static void Zero(byte[] byteArray)

@@ -69,7 +69,7 @@ namespace Microsoft.IdentityModel.Tokens
             Algorithm = algorithm;
             Key = key;
 
-            var rsaAlgorithm = Utility.ResolveRsaAlgorithm(key, algorithm, willUnwrap);
+            var rsaAlgorithm = RsaAlgorithm.ResolveRsaAlgorithm(key, algorithm, willUnwrap);
 
 #if NETSTANDARD1_4
 #else

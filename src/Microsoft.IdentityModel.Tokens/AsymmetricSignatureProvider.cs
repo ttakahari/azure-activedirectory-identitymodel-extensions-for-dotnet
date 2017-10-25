@@ -209,7 +209,7 @@ namespace Microsoft.IdentityModel.Tokens
                 throw LogHelper.LogArgumentNullException("algorithm");
 
             _hashAlgorithm = GetHashAlgorithmName(algorithm);
-            var rsaAlgorithm = Utility.ResolveRsaAlgorithm(key, algorithm, willCreateSignatures);
+            var rsaAlgorithm = RsaAlgorithm.ResolveRsaAlgorithm(key, algorithm, willCreateSignatures);
             if (rsaAlgorithm != null)
             {
                 if (rsaAlgorithm.rsa != null)
@@ -222,7 +222,7 @@ namespace Microsoft.IdentityModel.Tokens
                 throw LogHelper.LogExceptionMessage(new NotSupportedException(LogHelper.FormatInvariant(LogMessages.IDX10641, key)));
             }
 
-            var ecdsaAlgorithm = Utility.ResolveECDsaAlgorithm(key, algorithm, willCreateSignatures);
+            var ecdsaAlgorithm = ECDsaAlgorithm.ResolveECDsaAlgorithm(key, algorithm, willCreateSignatures);
             if (ecdsaAlgorithm != null && ecdsaAlgorithm.ecdsa != null)
             {
                 _ecdsa = ecdsaAlgorithm.ecdsa;
@@ -275,7 +275,7 @@ namespace Microsoft.IdentityModel.Tokens
                 throw LogHelper.LogArgumentNullException("algorithm");
 
             _hashAlgorithm = GetHashAlgorithmString(algorithm);
-            RsaAlgorithm rsaAlgorithm = Utility.ResolveRsaAlgorithm(key, algorithm, willCreateSignatures);
+            RsaAlgorithm rsaAlgorithm = RsaAlgorithm.ResolveRsaAlgorithm(key, algorithm, willCreateSignatures);
             if (rsaAlgorithm != null)
             {
                 if (rsaAlgorithm.rsa != null)
@@ -294,7 +294,7 @@ namespace Microsoft.IdentityModel.Tokens
                     throw LogHelper.LogExceptionMessage(new NotSupportedException(LogHelper.FormatInvariant(LogMessages.IDX10641, key)));
             }
 
-            ECDsaAlgorithm ecdsaAlgorithm = Utility.ResolveECDsaAlgorithm(key, algorithm, willCreateSignatures);
+            ECDsaAlgorithm ecdsaAlgorithm = ECDsaAlgorithm.ResolveECDsaAlgorithm(key, algorithm, willCreateSignatures);
             if (ecdsaAlgorithm != null && ecdsaAlgorithm.ecdsaCng != null)
             {
                 _ecdsa = ecdsaAlgorithm.ecdsaCng;
