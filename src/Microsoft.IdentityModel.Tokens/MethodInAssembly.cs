@@ -89,6 +89,16 @@ namespace Microsoft.IdentityModel.Tokens
 #endif
         }
 
+        public static byte[] SignData(ECDsa ecdsa, byte[] data, string algorithm = null)
+        {
+
+#if NETSTANDARD1_4
+            return ecdsa.SignData(data, GetHashAlgorithmname(algorithm));
+#else
+            return (ecdsa as ECDsaCng).SignData(data);
+#endif
+        }
+
         public static bool VerifyData(RSA rsa, byte[] data, byte[] signature, string algorithm)
         {
 #if (NET45 || NET451)
@@ -131,6 +141,15 @@ namespace Microsoft.IdentityModel.Tokens
             return false;
 #else
             return rsa.VerifyData(data, signature, GetHashAlgorithmname(algorithm), RSASignaturePadding.Pkcs1);
+#endif
+        }
+
+        public static bool VerifyData(ECDsa ecdsa, byte[] data, byte[] signature, string algorithm = null)
+        {
+#if NETSTANDARD1_4
+            return ecdsa.VerifyData(data, signature, GetHashAlgorithmname(algorithm));
+#else
+            return (ecdsa as ECDsaCng).VerifyData(data, signature);
 #endif
         }
 
