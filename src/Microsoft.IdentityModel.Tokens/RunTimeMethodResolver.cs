@@ -71,10 +71,10 @@ namespace Microsoft.IdentityModel.Tokens
 
         public static byte[] SignData(ECDsa ecdsa, byte[] data, string algorithm = null)
         {
-#if NETSTANDARD1_4
-            return ecdsa.SignData(data, GetHashAlgorithmname(algorithm));
-#else
+#if (NET45 || NET451)
             return (ecdsa as ECDsaCng).SignData(data);
+#else
+            return ecdsa.SignData(data, GetHashAlgorithmname(algorithm));
 #endif
         }
 
@@ -101,10 +101,10 @@ namespace Microsoft.IdentityModel.Tokens
 
         public static bool VerifyData(ECDsa ecdsa, byte[] data, byte[] signature, string algorithm = null)
         {
-#if NETSTANDARD1_4
-            return ecdsa.VerifyData(data, signature, GetHashAlgorithmname(algorithm));
-#else
+#if (NET45 || NET451)
             return (ecdsa as ECDsaCng).VerifyData(data, signature);
+#else
+            return ecdsa.VerifyData(data, signature, GetHashAlgorithmname(algorithm));
 #endif
         }
 
