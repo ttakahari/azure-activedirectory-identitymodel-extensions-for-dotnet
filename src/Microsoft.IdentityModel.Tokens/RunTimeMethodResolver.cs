@@ -6,84 +6,64 @@ using System.Security.Cryptography.X509Certificates;
 namespace Microsoft.IdentityModel.Tokens
 {
     internal class RunTimeMethodResolver
-    {
-        public delegate AsymmetricAlgorithm GetKeyDelegateAsymmetricAlgorithm(X509Certificate2 certificate);
-
+    {   
+        // delegate definition
         public delegate RSA GetKeyDelegateRSA(X509Certificate2 certificate);
 
+        public delegate AsymmetricAlgorithm GetKeyDelegateAsymmetricAlgorithm(X509Certificate2 certificate);
+
+        // if the run time methods are resolved
+        private static bool _resolved = false;
+
+        // delegates related to RSA private key and public key
+        private static GetKeyDelegateRSA _getPrivateKeyDelegateRSA = null;
+
+        private static GetKeyDelegateRSA _getPublicKeyDelegateRSA = null;
+      
         private static GetKeyDelegateAsymmetricAlgorithm _getPrivateKeyDelegateAsymmetricAlgorithm = null;
 
         private static GetKeyDelegateAsymmetricAlgorithm _getPublicKeyDelegateAsymmetricAlgorithm = null;
 
-        private static GetKeyDelegateRSA _getPrivateKeyDelegateRSA = null;
+#if (NET45 || NET451)
+        // RSA sign/verify data, encrypt/decrypt related objects in assembly
 
-        private static GetKeyDelegateRSA _getPublicKeyDelegateRSA = null;
+        private static object _RSASignaturePaddingPkcs1 = null;
 
-        private static bool _resolved = false;
+        private static object _RSAEncryptionPaddingPkcs1 = null;
 
-#if NETSTANDARD1_4
-        private static HashAlgorithmName GetHashAlgorithmname(string algorithm)
-        {
-            switch (algorithm)
-            {
-                case SecurityAlgorithms.Sha256:
-                    return HashAlgorithmName.SHA256;
-                case SecurityAlgorithms.Sha384:
-                    return HashAlgorithmName.SHA384;
-                case SecurityAlgorithms.Sha512:
-                    return HashAlgorithmName.SHA512;
-            }
-            throw new Exception("some");
-        }
-#endif
+        private static object _RSAEncryptionPaddingOaepSHA1 = null;
+
+        private static object _HashAlgorithmNameSHA256 = null;
+
+        private static object _HashAlgorithmNameSHA384 = null;
+
+        private static object _HashAlgorithmNameSHA512 = null;
+
+        private static MethodInfo _rsaSignData = null;
+
+        private static MethodInfo _rsaVerifyData = null;
+
+        private static MethodInfo _rsaEncrypt = null;
+
+        private static MethodInfo _rsaDecrypt = null;
+#endif     
 
         public static byte[] SignData(RSA rsa, byte[] data, string algorithm)
         {
+            ResolveRunTime();
+
 #if (NET45 || NET451)
-            Assembly mscorlibAssembly = null;
-            foreach (var assem in AppDomain.CurrentDomain.GetAssemblies())
+            try
             {
-                if (assem.GetName().Name == "mscorlib")
-                {
-                    mscorlibAssembly = assem;
-                }
+                return _rsaSignData.Invoke(rsa, new object[] { data, GetHashAlgorithmName(algorithm), _RSASignaturePaddingPkcs1 }) as Byte[];
             }
-
-            if (mscorlibAssembly != null)
+            catch(Exception ex)
             {
-                Type hashAlgorithmNameType = mscorlibAssembly.GetType("System.Security.Cryptography.HashAlgorithmName");
-                Type paddingType = mscorlibAssembly.GetType("System.Security.Cryptography.RSASignaturePadding");
-                var _Pkcs1Padding = paddingType.GetProperty("Pkcs1").GetValue(null);
-                Type type = mscorlibAssembly.GetType("System.Security.Cryptography.RSA");
-
-                object hashAlgorithm = null;
-                switch (algorithm)
-                {
-                    case SecurityAlgorithms.Sha256:
-                        hashAlgorithm = hashAlgorithmNameType.GetProperty("SHA256").GetValue(null);
-                        break;
-
-                    case SecurityAlgorithms.Sha384:
-                        hashAlgorithm = hashAlgorithmNameType.GetProperty("SHA384").GetValue(null);
-                        break;
-
-                    case SecurityAlgorithms.Sha512:
-                        hashAlgorithm = hashAlgorithmNameType.GetProperty("SHA512").GetValue(null);
-                        break;
-                }
-
-                var method = type.GetMethod("SignData", new Type[] { typeof(Byte[]), hashAlgorithmNameType, paddingType });
-                try
-                {
-                    return method.Invoke(rsa, new object[] { data, hashAlgorithm, _Pkcs1Padding }) as Byte[];
-                }
-                catch(Exception ex)
-                {
+                if (ex.InnerException != null)
                     throw ex.InnerException;
-                }
-            }
-
-            return null;
+                else
+                    throw ex;
+            } 
 #else
             return rsa.SignData(data, GetHashAlgorithmname(algorithm), RSASignaturePadding.Pkcs1);
 #endif
@@ -91,7 +71,6 @@ namespace Microsoft.IdentityModel.Tokens
 
         public static byte[] SignData(ECDsa ecdsa, byte[] data, string algorithm = null)
         {
-
 #if NETSTANDARD1_4
             return ecdsa.SignData(data, GetHashAlgorithmname(algorithm));
 #else
@@ -101,44 +80,20 @@ namespace Microsoft.IdentityModel.Tokens
 
         public static bool VerifyData(RSA rsa, byte[] data, byte[] signature, string algorithm)
         {
+            ResolveRunTime();
+
 #if (NET45 || NET451)
-            Assembly mscorlibAssembly = null;
-            foreach (var assem in AppDomain.CurrentDomain.GetAssemblies())
+            try
             {
-                if (assem.GetName().Name == "mscorlib")
-                {
-                    mscorlibAssembly = assem;
-                }
+                return (bool) _rsaVerifyData.Invoke(rsa, new object[] { data, signature, GetHashAlgorithmName(algorithm), _RSASignaturePaddingPkcs1 });
             }
-
-            if (mscorlibAssembly != null)
+            catch (Exception ex)
             {
-                Type hashAlgorithmNameType = mscorlibAssembly.GetType("System.Security.Cryptography.HashAlgorithmName");
-                Type paddingType = mscorlibAssembly.GetType("System.Security.Cryptography.RSASignaturePadding");
-                var _Pkcs1Padding = paddingType.GetProperty("Pkcs1").GetValue(null);
-                Type type = mscorlibAssembly.GetType("System.Security.Cryptography.RSA");
-
-                object hashAlgorithm = null;
-                switch (algorithm)
-                {
-                    case SecurityAlgorithms.Sha256:
-                        hashAlgorithm = hashAlgorithmNameType.GetProperty("SHA256").GetValue(null);
-                        break;
-
-                    case SecurityAlgorithms.Sha384:
-                        hashAlgorithm = hashAlgorithmNameType.GetProperty("SHA384").GetValue(null);
-                        break;
-
-                    case SecurityAlgorithms.Sha512:
-                        hashAlgorithm = hashAlgorithmNameType.GetProperty("SHA512").GetValue(null);
-                        break;
-                }
-
-                var method = type.GetMethod("VerifyData", new Type[] { typeof(Byte[]), typeof(Byte[]), hashAlgorithmNameType, paddingType });
-                return (bool)method.Invoke(rsa, new object[] { data, signature, hashAlgorithm, _Pkcs1Padding });
+                if (ex.InnerException != null)
+                    throw ex.InnerException;
+                else
+                    throw ex;
             }
-
-            return false;
 #else
             return rsa.VerifyData(data, signature, GetHashAlgorithmname(algorithm), RSASignaturePadding.Pkcs1);
 #endif
@@ -155,31 +110,23 @@ namespace Microsoft.IdentityModel.Tokens
 
         public static byte[] Decrypt(RSA rsa, byte[] data, bool fOAEP)
         {
+            ResolveRunTime();
+
 #if (NET45 || NET451)
-            Assembly mscorlibAssembly = null;
-            foreach (var assem in AppDomain.CurrentDomain.GetAssemblies())
+            try
             {
-                if (assem.GetName().Name == "mscorlib")
-                {
-                    mscorlibAssembly = assem;
-                }
-            }
-
-            if (mscorlibAssembly != null)
-            {
-                Type paddingType = mscorlibAssembly.GetType("System.Security.Cryptography.RSAEncryptionPadding");
-                var sha1Padding = paddingType.GetProperty("OaepSHA1").GetValue(null);
-                var pkcs1Padding = paddingType.GetProperty("Pkcs1").GetValue(null);
-                Type type = mscorlibAssembly.GetType("System.Security.Cryptography.RSA");
-
-                var method = type.GetMethod("Decrypt");
                 if (fOAEP)
-                    return method.Invoke(rsa, new object[] { data, sha1Padding }) as Byte[];
+                    return _rsaDecrypt.Invoke(rsa, new object[] { data, _RSAEncryptionPaddingOaepSHA1 }) as Byte[];
                 else
-                    return method.Invoke(rsa, new object[] { data, pkcs1Padding }) as Byte[];
+                    return _rsaDecrypt.Invoke(rsa, new object[] { data, _RSAEncryptionPaddingPkcs1 }) as Byte[];
             }
-
-            return null;
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                    throw ex.InnerException;
+                else
+                    throw ex;
+            }
 #else
             if (fOAEP)
                 return rsa.Decrypt(data, RSAEncryptionPadding.OaepSHA1);
@@ -190,37 +137,77 @@ namespace Microsoft.IdentityModel.Tokens
 
         public static byte[] Encrypt(RSA rsa, byte[] data, bool fOAEP)
         {
+            ResolveRunTime();
+
 #if (NET45 || NET451)
-            Assembly mscorlibAssembly = null;
-            foreach (var assem in AppDomain.CurrentDomain.GetAssemblies())
+            try
             {
-                if (assem.GetName().Name == "mscorlib")
-                {
-                    mscorlibAssembly = assem;
-                }
-            }
-
-            if (mscorlibAssembly != null)
-            {
-                Type paddingType = mscorlibAssembly.GetType("System.Security.Cryptography.RSAEncryptionPadding");
-                var sha1Padding = paddingType.GetProperty("OaepSHA1").GetValue(null);
-                var pkcs1Padding = paddingType.GetProperty("Pkcs1").GetValue(null);
-                Type type = mscorlibAssembly.GetType("System.Security.Cryptography.RSA");
-
-                var method = type.GetMethod("Encrypt");
                 if (fOAEP)
-                    return method.Invoke(rsa, new object[] { data, sha1Padding }) as Byte[];
+                    return _rsaEncrypt.Invoke(rsa, new object[] { data, _RSAEncryptionPaddingOaepSHA1 }) as Byte[];
                 else
-                    return method.Invoke(rsa, new object[] { data, pkcs1Padding }) as Byte[];
+                    return _rsaEncrypt.Invoke(rsa, new object[] { data, _RSAEncryptionPaddingPkcs1 }) as Byte[];
             }
-
-            return null;
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                    throw ex.InnerException;
+                else
+                    throw ex;
+            }
 #else
             if (fOAEP)
                 return rsa.Encrypt(data, RSAEncryptionPadding.OaepSHA1);
             else
                 return rsa.Encrypt(data, RSAEncryptionPadding.Pkcs1);
 #endif
+        }      
+
+        public static void SetPrivateKey(X509Certificate2 certificate, RsaAlgorithm rsaAlgorithm)
+        {
+            ResolveRunTime();
+
+#if (NET45 || NET451)            
+            if (_getPrivateKeyDelegateRSA != null)
+                rsaAlgorithm.rsa = _getPrivateKeyDelegateRSA(certificate);
+            else
+                rsaAlgorithm.rsaCryptoServiceProviderProxy = new RSACryptoServiceProviderProxy(_getPrivateKeyDelegateAsymmetricAlgorithm(certificate) as RSACryptoServiceProvider);
+#else
+            rsaAlgorithm.rsa = _getPrivateKeyDelegateRSA(certificate);
+#endif
+        }
+
+        public static void SetPublicKey(X509Certificate2 certificate, RsaAlgorithm rsaAlgorithm)
+        {
+            ResolveRunTime();
+
+#if (NET45 || NET451)
+            if (_getPublicKeyDelegateRSA != null)
+                rsaAlgorithm.rsa = _getPublicKeyDelegateRSA(certificate);
+            else
+                rsaAlgorithm.rsaCryptoServiceProviderProxy = new RSACryptoServiceProviderProxy(_getPublicKeyDelegateAsymmetricAlgorithm(certificate) as RSACryptoServiceProvider);
+#else
+            rsaAlgorithm.rsa = _getPublicKeyDelegateRSA(certificate);
+#endif
+        }
+
+        public static AsymmetricAlgorithm GetPrivateKey(X509Certificate2 certificate)
+        {
+            ResolveRunTime();
+
+            if (_getPrivateKeyDelegateRSA != null)
+                return _getPrivateKeyDelegateRSA(certificate) as AsymmetricAlgorithm;
+            else
+                return _getPrivateKeyDelegateAsymmetricAlgorithm(certificate);
+        }
+
+        public static AsymmetricAlgorithm GetPublicKey(X509Certificate2 certificate)
+        {
+            ResolveRunTime();
+
+            if (_getPublicKeyDelegateRSA != null)
+                return _getPublicKeyDelegateRSA(certificate) as AsymmetricAlgorithm;
+            else
+                return _getPublicKeyDelegateAsymmetricAlgorithm(certificate);
         }
 
         private static void ResolveRunTime()
@@ -230,15 +217,27 @@ namespace Microsoft.IdentityModel.Tokens
 
             _resolved = true;
 
-#if (NET45 || NET451 || NET452 || NET46)
+#if (NET45 || NET451)
             Assembly systemCoreAssembly = null;
+            Assembly mscorlibAssembly = null;
+
             foreach (var assem in AppDomain.CurrentDomain.GetAssemblies())
             {
                 if (assem.GetName().Name == "System.Core")
                 {
                     systemCoreAssembly = assem;
                 }
+
+                if (assem.GetName().Name == "mscorlib")
+                {
+                    mscorlibAssembly = assem;
+                }
+
+                if (systemCoreAssembly != null && mscorlibAssembly != null)
+                    break;
             }
+
+            // 1. GetRSAPrivateKey and GetRSAPublicKey
 
             if (systemCoreAssembly != null)
             {
@@ -282,6 +281,71 @@ namespace Microsoft.IdentityModel.Tokens
                     return certificate.PublicKey.Key;
                 };
             }
+
+            // 2. Methods and properties in mscorlib
+
+            if (mscorlibAssembly != null)
+            {
+                // 2.1 HashAlgorithmName
+                var hashAlgorithmNameType = mscorlibAssembly.GetType("System.Security.Cryptography.HashAlgorithmName");
+
+                if (hashAlgorithmNameType != null)
+                {
+                    // SHA256
+                    var sha256Property = hashAlgorithmNameType.GetProperty("SHA256");
+                    if (sha256Property != null)
+                        _HashAlgorithmNameSHA256 = sha256Property.GetValue(null);
+
+                    // SHA384
+                    var sha384Property = hashAlgorithmNameType.GetProperty("SHA384");
+                    if (sha384Property != null)
+                        _HashAlgorithmNameSHA384 = sha384Property.GetValue(null);
+
+                    // SHA512
+                    var sha512Property = hashAlgorithmNameType.GetProperty("SHA512");
+                    if (sha512Property != null)
+                        _HashAlgorithmNameSHA512 = sha512Property.GetValue(null);
+                }
+
+                // 2.2 RSASignaturePadding
+                var rsaSignaturePaddingType = mscorlibAssembly.GetType("System.Security.Cryptography.RSASignaturePadding");
+                if (rsaSignaturePaddingType != null)
+                {
+                    // pkcs1
+                    var pkcs1Property = rsaSignaturePaddingType.GetProperty("Pkcs1");
+                    if (pkcs1Property != null)
+                        _RSASignaturePaddingPkcs1 = pkcs1Property.GetValue(null);
+                }
+
+                // 2.3 RSASignaturePadding
+                var rsaEncryptionPaddingType = mscorlibAssembly.GetType("System.Security.Cryptography.RSAEncryptionPadding");
+                if (rsaEncryptionPaddingType != null)
+                {
+                    // pkcs1
+                    var pkcs1Property = rsaEncryptionPaddingType.GetProperty("Pkcs1");
+                    if (pkcs1Property != null)
+                        _RSAEncryptionPaddingPkcs1 = pkcs1Property.GetValue(null);
+
+                    // oaep
+                    var oaepProperty = rsaEncryptionPaddingType.GetProperty("OaepSHA1");
+                    if (oaepProperty != null)
+                        _RSAEncryptionPaddingOaepSHA1 = oaepProperty.GetValue(null);
+                }
+
+                // 2.4 Methods in RSA class
+                var rsaType = mscorlibAssembly.GetType("System.Security.Cryptography.RSA");
+                if (rsaType != null)
+                {
+                    _rsaDecrypt = rsaType.GetMethod("Decrypt");
+                    _rsaEncrypt = rsaType.GetMethod("Encrypt");
+                    if (hashAlgorithmNameType != null && rsaSignaturePaddingType != null)
+                    {
+                        _rsaVerifyData = rsaType.GetMethod("VerifyData", new Type[] { typeof(Byte[]), typeof(Byte[]), hashAlgorithmNameType, rsaSignaturePaddingType });
+                        _rsaSignData = rsaType.GetMethod("SignData", new Type[] { typeof(Byte[]), hashAlgorithmNameType, rsaSignaturePaddingType });
+                    }
+                }
+            }
+
 #else
             _getPrivateKeyDelegateRSA = certificate =>
             {
@@ -295,48 +359,34 @@ namespace Microsoft.IdentityModel.Tokens
 #endif
         }
 
-        public static void SetPrivateKey(X509Certificate2 certificate, RsaAlgorithm rsaAlgorithm)
+#if (NET45 || NET451)
+        private static Object GetHashAlgorithmName(string algorithm)
         {
-            ResolveRunTime();
-#if NETSTANDARD1_4
-            rsaAlgorithm.rsa = _getPrivateKeyDelegateRSA(certificate);
+            switch (algorithm)
+            {
+                case SecurityAlgorithms.Sha256:
+                    return _HashAlgorithmNameSHA256;
+                case SecurityAlgorithms.Sha384:
+                    return _HashAlgorithmNameSHA384;
+                case SecurityAlgorithms.Sha512:
+                    return _HashAlgorithmNameSHA512;
+            }
+            throw new Exception("some");
+        }
 #else
-            if (_getPrivateKeyDelegateRSA != null)
-                rsaAlgorithm.rsa = _getPrivateKeyDelegateRSA(certificate);
-            else
-                rsaAlgorithm.rsaCryptoServiceProviderProxy = new RSACryptoServiceProviderProxy(_getPrivateKeyDelegateAsymmetricAlgorithm(certificate) as RSACryptoServiceProvider);
+        private static HashAlgorithmName GetHashAlgorithmname(string algorithm)
+        {
+            switch (algorithm)
+            {
+                case SecurityAlgorithms.Sha256:
+                    return HashAlgorithmName.SHA256;
+                case SecurityAlgorithms.Sha384:
+                    return HashAlgorithmName.SHA384;
+                case SecurityAlgorithms.Sha512:
+                    return HashAlgorithmName.SHA512;
+            }
+            throw new Exception("some");
+        }
 #endif
-        }
-
-        public static void SetPublicKey(X509Certificate2 certificate, RsaAlgorithm rsaAlgorithm)
-        {
-            ResolveRunTime();
-#if NETSTANDARD1_4
-            rsaAlgorithm.rsa = _getPublicKeyDelegateRSA(certificate);
-#else
-            if (_getPublicKeyDelegateRSA != null)
-                rsaAlgorithm.rsa = _getPublicKeyDelegateRSA(certificate);
-            else
-                rsaAlgorithm.rsaCryptoServiceProviderProxy = new RSACryptoServiceProviderProxy(_getPublicKeyDelegateAsymmetricAlgorithm(certificate) as RSACryptoServiceProvider);
-#endif
-        }
-
-        public static AsymmetricAlgorithm GetPrivateKey(X509Certificate2 certificate)
-        {
-            ResolveRunTime();
-            if (_getPrivateKeyDelegateRSA != null)
-                return _getPrivateKeyDelegateRSA(certificate) as AsymmetricAlgorithm;
-            else
-                return _getPrivateKeyDelegateAsymmetricAlgorithm(certificate);
-        }
-
-        public static AsymmetricAlgorithm GetPublicKey(X509Certificate2 certificate)
-        {
-            ResolveRunTime();
-            if (_getPublicKeyDelegateRSA != null)
-                return _getPublicKeyDelegateRSA(certificate) as AsymmetricAlgorithm;
-            else
-                return _getPublicKeyDelegateAsymmetricAlgorithm(certificate);
-        }
     }
 }

@@ -309,7 +309,7 @@ namespace Microsoft.IdentityModel.Tokens
                 return RunTimeMethodResolver.VerifyData(_rsa, input, signature, _hashAlgorithm);
             else if (_ecdsa != null)
                 return RunTimeMethodResolver.VerifyData(_ecdsa, input, signature, _hashAlgorithm);
-#if (NET45 || NEt451)
+#if (NET45 || NET451)
             else if (_rsaCryptoServiceProviderProxy != null)
                 return _rsaCryptoServiceProviderProxy.VerifyData(input, _hashAlgorithm, signature);
 #endif
