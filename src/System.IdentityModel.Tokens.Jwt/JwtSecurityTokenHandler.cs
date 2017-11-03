@@ -332,15 +332,35 @@ namespace System.IdentityModel.Tokens.Jwt
             // Set the maximum number of segments to MaxJwtSegmentCount + 1. This controls the number of splits and allows detecting the number of segments is too large.
             // For example: "a.b.c.d.e.f.g.h" => [a], [b], [c], [d], [e], [f.g.h]. 6 segments.
             // If just MaxJwtSegmentCount was used, then [a], [b], [c], [d], [e.f.g.h] would be returned. 5 segments.
-            string[] tokenParts = token.Split(new char[] { '.' }, JwtConstants.MaxJwtSegmentCount + 1);
-            if (tokenParts.Length == JwtConstants.JwsSegmentCount)
+
+            int count = 0;
+            int next = -1;
+            while((next = token.IndexOf('.', next+1)) != -1)
+            {
+                count++;
+                if (count > 4)
+                    break;
+            }
+
+            if (count == 2)
             {
                 return RegexJws.IsMatch(token);
             }
-            else if (tokenParts.Length == JwtConstants.JweSegmentCount)
+            else if (count == 4)
             {
                 return RegexJwe.IsMatch(token);
             }
+
+
+            //string[] tokenParts = token.Split(new char[] { '.' }, JwtConstants.MaxJwtSegmentCount + 1);
+            //if (tokenParts.Length == JwtConstants.JwsSegmentCount)
+            //{
+            //    return RegexJws.IsMatch(token);
+            //}
+            //else if (tokenParts.Length == JwtConstants.JweSegmentCount)
+            //{
+            //    return RegexJwe.IsMatch(token);
+            //}
 
             IdentityModelEventSource.Logger.WriteInformation(LogMessages.IDX12720);
             return false;
