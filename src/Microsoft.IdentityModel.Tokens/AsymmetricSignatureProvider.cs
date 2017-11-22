@@ -40,7 +40,7 @@ namespace Microsoft.IdentityModel.Tokens
         private ECDsa _ecdsa;
         private RSA _rsa;
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
         private RSACryptoServiceProviderProxy _rsaCryptoServiceProviderProxy;
 #endif
 
@@ -211,7 +211,7 @@ namespace Microsoft.IdentityModel.Tokens
             RsaAlgorithm rsaAlgorithm = RsaAlgorithm.ResolveRsaAlgorithm(key, algorithm, willCreateSignatures);
             if (rsaAlgorithm != null)
             {
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
                 if (rsaAlgorithm.rsaCryptoServiceProviderProxy != null)
                 {
                     _rsaCryptoServiceProviderProxy = rsaAlgorithm.rsaCryptoServiceProviderProxy;
@@ -237,7 +237,7 @@ namespace Microsoft.IdentityModel.Tokens
 
             ECDsaAlgorithm ecdsaAlgorithm = ECDsaAlgorithm.ResolveECDsaAlgorithm(key, algorithm, willCreateSignatures);
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
             if (ecdsaAlgorithm != null && ecdsaAlgorithm.ecdsaCng != null)
             {
                 _ecdsa = ecdsaAlgorithm.ecdsaCng;
@@ -279,7 +279,7 @@ namespace Microsoft.IdentityModel.Tokens
                 return RunTimeMethodResolver.SignData(_rsa, input, _hashAlgorithm);
             else if (_ecdsa != null)
                 return RunTimeMethodResolver.SignData(_ecdsa, input, _hashAlgorithm);
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
             else if (_rsaCryptoServiceProviderProxy != null)
                 return _rsaCryptoServiceProviderProxy.SignData(input, _hashAlgorithm);
 #endif
@@ -315,7 +315,7 @@ namespace Microsoft.IdentityModel.Tokens
                 return RunTimeMethodResolver.VerifyData(_rsa, input, signature, _hashAlgorithm);
             else if (_ecdsa != null)
                 return RunTimeMethodResolver.VerifyData(_ecdsa, input, signature, _hashAlgorithm);
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
             else if (_rsaCryptoServiceProviderProxy != null)
                 return _rsaCryptoServiceProviderProxy.VerifyData(input, _hashAlgorithm, signature);
 #endif
@@ -353,7 +353,7 @@ namespace Microsoft.IdentityModel.Tokens
 
                 if (disposing)
                 {
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
                     if (_rsaCryptoServiceProviderProxy != null)
                         _rsaCryptoServiceProviderProxy.Dispose();
 #endif

@@ -101,7 +101,7 @@ namespace Microsoft.IdentityModel.Tokens
 
     internal class RsaAlgorithm
     {
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
         public RSACryptoServiceProviderProxy rsaCryptoServiceProviderProxy;
 #endif
         public RSA rsa;
