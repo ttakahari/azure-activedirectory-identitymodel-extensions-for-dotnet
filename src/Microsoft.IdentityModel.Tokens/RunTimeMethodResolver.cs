@@ -25,7 +25,7 @@ namespace Microsoft.IdentityModel.Tokens
 
         private static GetKeyDelegateAsymmetricAlgorithm _getPublicKeyDelegateAsymmetricAlgorithm = null;
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
         // RSA sign/verify data, encrypt/decrypt related objects in assembly
 
         private static object _RSASignaturePaddingPkcs1 = null;
@@ -62,7 +62,7 @@ namespace Microsoft.IdentityModel.Tokens
             if (string.IsNullOrEmpty(algorithm))
                 LogHelper.LogArgumentNullException(nameof(algorithm));
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
             return _rsaSignData.Invoke(rsa, new object[] { data, GetHashAlgorithmName(algorithm), _RSASignaturePaddingPkcs1 }) as Byte[];
 #else
             return rsa.SignData(data, GetHashAlgorithmname(algorithm), RSASignaturePadding.Pkcs1);
@@ -77,7 +77,7 @@ namespace Microsoft.IdentityModel.Tokens
             if (data == null)
                 LogHelper.LogArgumentNullException(nameof(data));
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
             return (ecdsa as ECDsaCng).SignData(data);
 #else
             if (string.IsNullOrEmpty(algorithm))
@@ -103,7 +103,7 @@ namespace Microsoft.IdentityModel.Tokens
             if (string.IsNullOrEmpty(algorithm))
                 LogHelper.LogArgumentNullException(nameof(algorithm));
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
             return (bool) _rsaVerifyData.Invoke(rsa, new object[] { data, signature, GetHashAlgorithmName(algorithm), _RSASignaturePaddingPkcs1 });
 #else
             return rsa.VerifyData(data, signature, GetHashAlgorithmname(algorithm), RSASignaturePadding.Pkcs1);
@@ -122,7 +122,7 @@ namespace Microsoft.IdentityModel.Tokens
             if (signature == null)
                 LogHelper.LogArgumentNullException(nameof(signature));
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
             return (ecdsa as ECDsaCng).VerifyData(data, signature);
 #else
             if (string.IsNullOrEmpty(algorithm))
@@ -142,7 +142,7 @@ namespace Microsoft.IdentityModel.Tokens
             if (data == null)
                 LogHelper.LogArgumentNullException(nameof(data));
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
             if (fOAEP)
                 return _rsaDecrypt.Invoke(rsa, new object[] { data, _RSAEncryptionPaddingOaepSHA1 }) as Byte[];
             else
@@ -165,7 +165,7 @@ namespace Microsoft.IdentityModel.Tokens
             if (data == null)
                 LogHelper.LogArgumentNullException(nameof(data));
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
             if (fOAEP)
                 return _rsaEncrypt.Invoke(rsa, new object[] { data, _RSAEncryptionPaddingOaepSHA1 }) as Byte[];
             else
@@ -188,7 +188,7 @@ namespace Microsoft.IdentityModel.Tokens
             if (rsaAlgorithm == null)
                 LogHelper.LogArgumentNullException(nameof(rsaAlgorithm));
 
-#if (NET45 || NET451)            
+#if (NET45 || NET451 || NET46)            
             if (_getPrivateKeyDelegateRSA != null)
                 rsaAlgorithm.rsa = _getPrivateKeyDelegateRSA(certificate);
             else
@@ -208,7 +208,7 @@ namespace Microsoft.IdentityModel.Tokens
             if (rsaAlgorithm == null)
                 LogHelper.LogArgumentNullException(nameof(rsaAlgorithm));
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
             if (_getPublicKeyDelegateRSA != null)
                 rsaAlgorithm.rsa = _getPublicKeyDelegateRSA(certificate);
             else
@@ -251,7 +251,7 @@ namespace Microsoft.IdentityModel.Tokens
 
             _resolved = true;
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
             Assembly systemCoreAssembly = null;
             Assembly mscorlibAssembly = null;
 
@@ -393,7 +393,7 @@ namespace Microsoft.IdentityModel.Tokens
 #endif
         }
 
-#if (NET45 || NET451)
+#if (NET45 || NET451 || NET46)
         private static Object GetHashAlgorithmName(string algorithm)
         {
             switch (algorithm)
