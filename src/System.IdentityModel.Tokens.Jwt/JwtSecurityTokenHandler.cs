@@ -45,8 +45,6 @@ namespace System.IdentityModel.Tokens.Jwt
     /// </summary>
     public class JwtSecurityTokenHandler : SecurityTokenHandler
     {
-        internal static Regex RegexJws;
-        internal static Regex RegexJwe;
 
         private delegate bool CertMatcher(X509Certificate2 cert);
         private int _defaultTokenLifetimeInMinutes = DefaultTokenLifetimeInMinutes;
@@ -107,9 +105,6 @@ namespace System.IdentityModel.Tokens.Jwt
                  { SecurityAlgorithms.RsaSha384Signature, SecurityAlgorithms.RsaSha384 },
                  { SecurityAlgorithms.RsaSha512Signature, SecurityAlgorithms.RsaSha512 },
             };
-
-            RegexJws = new Regex(JwtConstants.JsonCompactSerializationRegex, RegexOptions.Compiled | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
-            RegexJwe = new Regex(JwtConstants.JweCompactSerializationRegex, RegexOptions.Compiled | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
         }
 
         /// <summary>
@@ -346,11 +341,11 @@ namespace System.IdentityModel.Tokens.Jwt
             string[] tokenParts = token.Split(new char[] { '.' }, JwtConstants.MaxJwtSegmentCount + 1);
             if (tokenParts.Length == JwtConstants.JwsSegmentCount)
             {
-                return RegexJws.IsMatch(token);
+                return JwtTokenUtilities.RegexJws.IsMatch(token);
             }
             else if (tokenParts.Length == JwtConstants.JweSegmentCount)
             {
-                return RegexJwe.IsMatch(token);
+                return JwtTokenUtilities.RegexJwe.IsMatch(token);
             }
 
             LogHelper.LogInformation(LogMessages.IDX12720);

@@ -26,6 +26,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Threading.Tasks;
 using Microsoft.IdentityModel.Logging;
 
 namespace Microsoft.IdentityModel.Tokens
@@ -94,12 +95,27 @@ namespace Microsoft.IdentityModel.Tokens
         public abstract byte[] Sign(byte[] input);
 
         /// <summary>
+        /// This must be overridden to produce a signature over the 'input' asynchronously.
+        /// </summary>
+        /// <param name="input">bytes to sign.</param>
+        /// <returns>signed bytes</returns>
+        public abstract Task<byte[]> SignAsync(byte[] input);
+
+        /// <summary>
         /// This must be overridden to verify a signature created over the 'input'.
         /// </summary>
         /// <param name="input">bytes to verify.</param>
         /// <param name="signature">signature to compare against.</param>
         /// <returns>true if the computed signature matches the signature parameter, false otherwise.</returns>
         public abstract bool Verify(byte[] input, byte[] signature);
+
+        /// <summary>
+        /// This must be overridden to verify a signature created over the 'input' asynchronously.
+        /// </summary>
+        /// <param name="input">bytes to verify.</param>
+        /// <param name="signature">signature to compare against.</param>
+        /// <returns>true if the computed signature matches the signature parameter, false otherwise.</returns>
+        public abstract Task<bool> VerifyAsync(byte[] input, byte[] signature);
 
         /// <summary>
         /// Gets or sets a bool indicating if this <see cref="SignatureProvider"/> is expected to create signatures.

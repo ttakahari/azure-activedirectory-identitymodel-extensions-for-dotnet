@@ -279,7 +279,7 @@ namespace System.IdentityModel.Tokens.Jwt
         /// <summary>
         /// Gets the 'value' of the 'JWT ID' claim { jti, ''value' }.
         /// </summary>
-        /// <remarks>If the 'JWT ID' claim is not found, null is returned.</remarks>
+        /// <remarks>If the 'JWT ID' claim is not found, an empty string is returned.</remarks>
         public override string Id
         {
             get
@@ -294,7 +294,7 @@ namespace System.IdentityModel.Tokens.Jwt
         /// <summary>
         /// Gets the 'value' of the 'issuer' claim { iss, 'value' }.
         /// </summary>
-        /// <remarks>If the 'issuer' claim is not found, null is returned.</remarks>
+        /// <remarks>If the 'issuer' claim is not found, an empty string is returned.</remarks>
         public override string Issuer
         {
             get
