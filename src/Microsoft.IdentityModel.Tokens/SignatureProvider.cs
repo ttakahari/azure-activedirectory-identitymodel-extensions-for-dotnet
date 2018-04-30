@@ -99,7 +99,10 @@ namespace Microsoft.IdentityModel.Tokens
         /// </summary>
         /// <param name="input">bytes to sign.</param>
         /// <returns>signed bytes</returns>
-        public abstract Task<byte[]> SignAsync(byte[] input);
+        public virtual Task<byte[]> SignAsync(byte[] input)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// This must be overridden to verify a signature created over the 'input'.
@@ -115,7 +118,10 @@ namespace Microsoft.IdentityModel.Tokens
         /// <param name="input">bytes to verify.</param>
         /// <param name="signature">signature to compare against.</param>
         /// <returns>true if the computed signature matches the signature parameter, false otherwise.</returns>
-        public abstract Task<bool> VerifyAsync(byte[] input, byte[] signature);
+        public virtual Task<bool> VerifyAsync(byte[] input, byte[] signature)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Gets or sets a bool indicating if this <see cref="SignatureProvider"/> is expected to create signatures.

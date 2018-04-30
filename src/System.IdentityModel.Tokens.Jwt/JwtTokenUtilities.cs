@@ -25,7 +25,13 @@
 //
 //------------------------------------------------------------------------------
 
+using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using TokenLogMessages = Microsoft.IdentityModel.Tokens.LogMessages;
 
 namespace System.IdentityModel.Tokens.Jwt
 {
@@ -33,5 +39,55 @@ namespace System.IdentityModel.Tokens.Jwt
     {
         internal static Regex RegexJws = new Regex(JwtConstants.JsonCompactSerializationRegex, RegexOptions.Compiled | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
         internal static Regex RegexJwe = new Regex(JwtConstants.JweCompactSerializationRegex, RegexOptions.Compiled | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
+        
+        /// <summary>
+        /// Produces a signature over the 'input'.
+        /// </summary>
+        /// <param name="input">String to be signed</param>
+        /// <param name="signingCredentials">The <see cref="SigningCredentials"/> that contain crypto specs used to sign the token.</param>
+        /// <returns>The bse64urlendcoded signature over the bytes obtained from UTF8Encoding.GetBytes( 'input' ).</returns>
+        /// <exception cref="ArgumentNullException">'input' or 'signingCredentials' is null.</exception>
+        internal async Task<string> CreateEncodedSignatureAsync(string input, SigningCredentials signingCredentials)
+        {
+            if (input == null)
+                throw LogHelper.LogArgumentNullException(nameof(input));
+
+            if (signingCredentials == null)
+                throw LogHelper.LogArgumentNullException(nameof(signingCredentials));
+
+            var cryptoProviderFactory = signingCredentials.CryptoProviderFactory ?? signingCredentials.Key.CryptoProviderFactory;
+            var signatureProvider = cryptoProviderFactory.CreateForSigning(signingCredentials.Key, signingCredentials.Algorithm);
+            if (signatureProvider == null)
+                throw LogHelper.LogExceptionMessage(new InvalidOperationException(LogHelper.FormatInvariant(TokenLogMessages.IDX10636, (signingCredentials.Key == null ? "Null" : signingCredentials.Key.ToString()), (signingCredentials.Algorithm ?? "Null"))));
+
+            try
+            {
+                LogHelper.LogVerbose(LogMessages.IDX12645);
+                return Base64UrlEncoder.Encode(await signatureProvider.SignAsync(Encoding.UTF8.GetBytes(input)).ConfigureAwait(false));
+            }
+            finally
+            {
+                cryptoProviderFactory.ReleaseSignatureProvider(signatureProvider);
+            }
+        }
+
+        internal static byte[] GenerateKeyBytes(int sizeInBits)
+        {
+            byte[] key = null;
+            if (sizeInBits != 256 && sizeInBits != 384 && sizeInBits != 512)
+                throw LogHelper.LogExceptionMessage(new ArgumentException(TokenLogMessages.IDX10401, nameof(sizeInBits)));
+
+            var aes = Aes.Create();
+            int halfSizeInBytes = sizeInBits >> 4;
+            key = new byte[halfSizeInBytes << 1];
+            aes.KeySize = sizeInBits >> 1;
+            // The design of AuthenticatedEncryption needs two keys of the same size - generate them, each half size of what's required
+            aes.GenerateKey();
+            Array.Copy(aes.Key, key, halfSizeInBytes);
+            aes.GenerateKey();
+            Array.Copy(aes.Key, 0, key, halfSizeInBytes, halfSizeInBytes);
+
+            return key;
+        }
     }
 }

@@ -78,14 +78,8 @@ namespace System.IdentityModel.Tokens.Jwt
         /// <exception cref="ArgumentNullException">'payload' is null.</exception>
         public JsonWebToken(JObject header, JObject payload)
         {
-            if (header == null)
-                throw LogHelper.LogArgumentNullException(nameof(header));
-
-            if (payload == null)
-                throw LogHelper.LogArgumentNullException(nameof(payload));
-
-            Header = header;
-            Payload = payload;
+            Header = header ?? throw LogHelper.LogArgumentNullException(nameof(header));
+            Payload = payload ?? throw LogHelper.LogArgumentNullException(nameof(payload));
             RawSignature = string.Empty;
         }
 

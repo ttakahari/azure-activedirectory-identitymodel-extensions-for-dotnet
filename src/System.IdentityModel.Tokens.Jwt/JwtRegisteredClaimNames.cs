@@ -90,6 +90,11 @@ namespace System.IdentityModel.Tokens.Jwt
         public const string Email = "email";
 
         /// <summary>
+        /// https://tools.ietf.org/html/rfc7516#section-4.1.2
+        /// </summary>
+        public const string Enc = "enc";
+
+        /// <summary>
         /// http://tools.ietf.org/html/rfc7519#section-4
         /// </summary>
         public const string Exp = "exp";

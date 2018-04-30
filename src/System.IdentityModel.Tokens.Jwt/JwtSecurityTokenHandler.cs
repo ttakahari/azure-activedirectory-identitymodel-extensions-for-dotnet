@@ -547,6 +547,9 @@ namespace System.IdentityModel.Tokens.Jwt
             if (cryptoProviderFactory == null)
                 throw LogHelper.LogExceptionMessage(new ArgumentException(LogMessages.IDX12733));
 
+            if (encryptingCredentials == null)
+                throw LogHelper.LogArgumentNullException(nameof(encryptingCredentials));
+            
             // if direct algorithm, look for support
             if (JwtConstants.DirectKeyUseAlg.Equals(encryptingCredentials.Alg, StringComparison.Ordinal))
             {
