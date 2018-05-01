@@ -30,7 +30,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Tokens.Jwt;
 using Newtonsoft.Json.Linq;
 
-namespace System.IdentityModel.Tokens.Jwt
+namespace Microsoft.IdentityModel.Tokens.Jwt
 {
     class JsonWebToken : SecurityToken
     {
