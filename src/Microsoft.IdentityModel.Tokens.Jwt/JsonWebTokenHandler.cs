@@ -25,17 +25,14 @@
 //
 //------------------------------------------------------------------------------
 
+using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json.Linq;
 using System;
-using System.IdentityModel.Tokens.Jwt;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.IdentityModel.Logging;
-
 using TokenLogMessages = Microsoft.IdentityModel.Tokens.LogMessages;
-using JwtLogMessages = System.IdentityModel.Tokens.Jwt.LogMessages;
-using System.Collections.Generic;
 
 namespace Microsoft.IdentityModel.Tokens.Jwt
 {
@@ -105,7 +102,7 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
             var cryptoProviderFactory = encryptingCredentials.CryptoProviderFactory ?? encryptingCredentials.Key.CryptoProviderFactory;
 
             if (cryptoProviderFactory == null)
-                throw LogHelper.LogExceptionMessage(new ArgumentException(JwtLogMessages.IDX12733));
+                throw LogHelper.LogExceptionMessage(new ArgumentException(LogMessages.IDX12733));
 
             // if direct algorithm, look for support
             if (JwtConstants.DirectKeyUseAlg.Equals(encryptingCredentials.Alg, StringComparison.Ordinal))
@@ -132,7 +129,7 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
 
                 var encryptionProvider = cryptoProviderFactory.CreateAuthenticatedEncryptionProvider(encryptingCredentials.Key, encryptingCredentials.Enc);
                 if (encryptionProvider == null)
-                    throw LogHelper.LogExceptionMessage(new SecurityTokenEncryptionFailedException(JwtLogMessages.IDX12730));
+                    throw LogHelper.LogExceptionMessage(new SecurityTokenEncryptionFailedException(LogMessages.IDX12730));
 
                 try
                 {
@@ -167,7 +164,7 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
                 var wrappedKey = kwProvider.WrapKey(symmetricKey.Key);
                 var encryptionProvider = cryptoProviderFactory.CreateAuthenticatedEncryptionProvider(symmetricKey, encryptingCredentials.Enc);
                 if (encryptionProvider == null)
-                    throw LogHelper.LogExceptionMessage(new SecurityTokenEncryptionFailedException(JwtLogMessages.IDX12730));
+                    throw LogHelper.LogExceptionMessage(new SecurityTokenEncryptionFailedException(LogMessages.IDX12730));
 
                 try
                 {
@@ -200,7 +197,7 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         }
 
         /// <summary>
-        /// Gets the outbound algorithm map that is passed to the <see cref="JwtHeader"/> constructor.
+        /// Gets the outbound algorithm map that is used to form the header.
         /// </summary>
         public IDictionary<string, string> OutboundAlgorithmMap
         {

@@ -25,9 +25,8 @@
 //
 //------------------------------------------------------------------------------
 
+using System;
 using Microsoft.IdentityModel.Logging;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.IdentityModel.Tokens.Jwt;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.IdentityModel.Tokens.Jwt
@@ -185,57 +184,42 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         /// <summary>
         /// Gets the original raw data of this instance when it was created.
         /// </summary>
-        /// <remarks>The original JSON Compact serialized format passed to one of the two constructors <see cref="JwtSecurityToken(string)"/>
-        /// or <see cref="JwtSecurityToken( JwtHeader, JwtPayload, string, string, string )"/></remarks>
         public string RawAuthenticationTag { get; private set; }
 
         /// <summary>
         /// Gets the original raw data of this instance when it was created.
         /// </summary>
-        /// <remarks>The original JSON Compact serialized format passed to one of the two constructors <see cref="JwtSecurityToken(string)"/>
-        /// or <see cref="JwtSecurityToken( JwtHeader, JwtPayload, string, string, string )"/></remarks>
+
         public string RawCiphertext { get; private set; }
 
         /// <summary>
         /// Gets the original raw data of this instance when it was created.
         /// </summary>
-        /// <remarks>The original JSON Compact serialized format passed to one of the two constructors <see cref="JwtSecurityToken(string)"/>
-        /// or <see cref="JwtSecurityToken( JwtHeader, JwtPayload, string, string, string )"/></remarks>
         public string RawData { get; private set; }
 
         /// <summary>
         /// Gets the original raw data of this instance when it was created.
         /// </summary>
-        /// <remarks>The original JSON Compact serialized format passed to one of the two constructors <see cref="JwtSecurityToken(string)"/>
-        /// or <see cref="JwtSecurityToken( JwtHeader, JwtPayload, string, string, string )"/></remarks>
         public string RawEncryptedKey { get; private set; }
 
         /// <summary>
         /// Gets the original raw data of this instance when it was created.
         /// </summary>
-        /// <remarks>The original JSON Compact serialized format passed to one of the two constructors <see cref="JwtSecurityToken(string)"/>
-        /// or <see cref="JwtSecurityToken( JwtHeader, JwtPayload, string, string, string )"/></remarks>
         public string RawInitializationVector { get; private set; }
 
         /// <summary>
         /// Gets the original raw data of this instance when it was created.
         /// </summary>
-        /// <remarks>The original JSON Compact serialized format passed to one of the two constructors <see cref="JwtSecurityToken(string)"/>
-        /// or <see cref="JwtSecurityToken( JwtHeader, JwtPayload, string, string, string )"/></remarks>
         public string RawHeader { get; internal set; }
 
         /// <summary>
         /// Gets the original raw data of this instance when it was created.
         /// </summary>
-        /// <remarks>The original JSON Compact serialized format passed to one of the two constructors <see cref="JwtSecurityToken(string)"/>
-        /// or <see cref="JwtSecurityToken( JwtHeader, JwtPayload, string, string, string )"/></remarks>
         public string RawPayload { get; internal set; }
 
         /// <summary>
         /// Gets the original raw data of this instance when it was created.
         /// </summary>
-        /// <remarks>The original JSON Compact serialized format passed to one of the two constructors <see cref="JwtSecurityToken(string)"/>
-        /// or <see cref="JwtSecurityToken( JwtHeader, JwtPayload, string, string, string )"/></remarks>
         public string RawSignature { get; internal set; }
 
         /// <summary>

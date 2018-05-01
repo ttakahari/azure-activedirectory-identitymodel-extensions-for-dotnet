@@ -25,7 +25,7 @@
 //
 //------------------------------------------------------------------------------
 
-namespace System.IdentityModel.Tokens.Jwt
+namespace Microsoft.IdentityModel.Tokens.Jwt
 {
     /// <summary>
     /// List of header parameter names see: http://tools.ietf.org/html/rfc7519#section-5.

@@ -27,18 +27,29 @@
 
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TokenLogMessages = Microsoft.IdentityModel.Tokens.LogMessages;
 
-namespace System.IdentityModel.Tokens.Jwt
+namespace Microsoft.IdentityModel.Tokens.Jwt
 {
-    class JwtTokenUtilities
+    /// <summary>
+    /// A class which contains useful methods for processing Jwt tokens.
+    /// </summary>
+    public class JwtTokenUtilities
     {
-        internal static Regex RegexJws = new Regex(JwtConstants.JsonCompactSerializationRegex, RegexOptions.Compiled | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
-        internal static Regex RegexJwe = new Regex(JwtConstants.JweCompactSerializationRegex, RegexOptions.Compiled | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
+        /// <summary>
+        /// Regex that is used to figure out if a token is in JWS format.
+        /// </summary>
+        public static Regex RegexJws = new Regex(JwtConstants.JsonCompactSerializationRegex, RegexOptions.Compiled | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
+        
+        /// <summary>
+        /// Regex that is used to figure out if a token is in JWE format.
+        /// </summary>
+        public static Regex RegexJwe = new Regex(JwtConstants.JweCompactSerializationRegex, RegexOptions.Compiled | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
         
         /// <summary>
         /// Produces a signature over the 'input'.

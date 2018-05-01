@@ -25,7 +25,7 @@
 //
 //------------------------------------------------------------------------------
 
-namespace System.IdentityModel.Tokens.Jwt
+namespace Microsoft.IdentityModel.Tokens.Jwt
 {
     /// <summary>
     /// Constants for Json Web tokens.
