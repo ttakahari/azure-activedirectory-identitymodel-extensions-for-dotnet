@@ -65,17 +65,17 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         /// <summary>
         /// The number of parts in a JWE token.
         /// </summary>
-        internal const int JweSegmentCount = 5;
+        public const int JweSegmentCount = 5;
 
         /// <summary>
         /// The number of parts in a JWS token.
         /// </summary>
-        internal const int JwsSegmentCount = 3;
+        public const int JwsSegmentCount = 3;
 
         /// <summary>
         /// The maximum number of parts in a JWT.
         /// </summary>
-        internal const int MaxJwtSegmentCount = 5;
+        public const int MaxJwtSegmentCount = 5;
 
         /// <summary>
         /// JWE header alg indicating a shared symmetric key is directly used as CEK.
