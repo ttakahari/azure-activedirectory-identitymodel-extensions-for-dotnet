@@ -26,6 +26,7 @@
 //------------------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -55,15 +56,15 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
             if (tokenParts.Length == JwtConstants.JwsSegmentCount)
             {
                 if (!JwtTokenUtilities.RegexJws.IsMatch(jwtEncodedString))
-                    throw LogHelper.LogExceptionMessage(new ArgumentException(LogHelper.FormatInvariant(LogMessages.IDX12709, jwtEncodedString)));
+                    throw LogHelper.LogExceptionMessage(new ArgumentException(LogHelper.FormatInvariant(LogMessages.IDX14100, jwtEncodedString)));
             }
             else if (tokenParts.Length == JwtConstants.JweSegmentCount)
             {
                 if (!JwtTokenUtilities.RegexJwe.IsMatch(jwtEncodedString))
-                    throw LogHelper.LogExceptionMessage(new ArgumentException(LogHelper.FormatInvariant(LogMessages.IDX12709, jwtEncodedString)));
+                    throw LogHelper.LogExceptionMessage(new ArgumentException(LogHelper.FormatInvariant(LogMessages.IDX14100, jwtEncodedString)));
             }
             else
-                throw LogHelper.LogExceptionMessage(new ArgumentException(LogHelper.FormatInvariant(LogMessages.IDX12709, jwtEncodedString)));
+                throw LogHelper.LogExceptionMessage(new ArgumentException(LogHelper.FormatInvariant(LogMessages.IDX14100, jwtEncodedString)));
 
             Decode(tokenParts, jwtEncodedString);
         }
@@ -89,14 +90,14 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         /// <param name="rawData">the original token.</param>
         internal void Decode(string[] tokenParts, string rawData)
         {
-            LogHelper.LogInformation(LogMessages.IDX12716, rawData);
+            LogHelper.LogInformation(LogMessages.IDX14106, rawData);
             try
             {
                 Header = JObject.Parse(Base64UrlEncoder.Decode(tokenParts[0]));
             }
             catch (Exception ex)
             {
-                throw LogHelper.LogExceptionMessage(new ArgumentException(LogHelper.FormatInvariant(LogMessages.IDX12729, tokenParts[0], rawData), ex));
+                throw LogHelper.LogExceptionMessage(new ArgumentException(LogHelper.FormatInvariant(LogMessages.IDX14102, tokenParts[0], rawData), ex));
             }
 
             if (tokenParts.Length == JwtConstants.JweSegmentCount)
@@ -115,8 +116,8 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         private void DecodeJws(string[] tokenParts)
         {
             // Log if CTY is set, assume compact JWS
-            if (Payload.Value<string>(JwtHeaderParameterNames.Cty) != null)
-                LogHelper.LogVerbose(LogHelper.FormatInvariant(LogMessages.IDX12738, Payload.Value<string>(JwtHeaderParameterNames.Cty)));
+            if (Cty != null)
+                LogHelper.LogVerbose(LogHelper.FormatInvariant(LogMessages.IDX14105, Payload.Value<string>(JwtHeaderParameterNames.Cty)));
 
             try
             {
@@ -124,7 +125,7 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
             }
             catch (Exception ex)
             {
-                throw LogHelper.LogExceptionMessage(new ArgumentException(LogHelper.FormatInvariant(LogMessages.IDX12723, tokenParts[1], RawData), ex));
+                throw LogHelper.LogExceptionMessage(new ArgumentException(LogHelper.FormatInvariant(LogMessages.IDX14101, tokenParts[1], RawData), ex));
             }
 
             RawHeader = tokenParts[0];
@@ -153,6 +154,77 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         }
 
         /// <summary>
+        /// Gets the 'value' of the 'actor' claim { actort, 'value' }.
+        /// </summary>
+        /// <remarks>If the 'actor' claim is not found, an empty string is returned.</remarks> 
+        public string Actor
+        {
+            get
+            {
+                if (Payload != null)
+                    return Payload.Value<string>(JwtRegisteredClaimNames.Actort) ?? String.Empty;
+                return String.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Gets the 'value' of the 'alg' claim { alg, 'value' }.
+        /// </summary>
+        /// <remarks>If the 'alg' claim is not found, an empty string is returned.</remarks>   
+        public string Alg
+        {
+            get
+            {
+                if (Header != null)
+                    return Header.Value<string>(JwtHeaderParameterNames.Alg) ?? String.Empty;
+                return String.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of 'audience' claim { aud, 'value' }.
+        /// </summary>
+        /// <remarks>If the 'audience' claim is not found, enumeration will be empty.</remarks>
+        public IEnumerable<string> Audiences
+        {
+            get
+            {
+                if (Payload != null)
+                    return Payload.Value<List<string>>(JwtRegisteredClaimNames.Aud) ?? new List<string>();
+                return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// Gets the 'value' of the 'cty' claim { cty, 'value' }.
+        /// </summary>
+        /// <remarks>If the 'cty' claim is not found, an empty string is returned.</remarks>   
+        public string Cty
+        {
+            get
+            {
+                if (Header != null)
+                    return Header.Value<string>(JwtHeaderParameterNames.Cty) ?? String.Empty;
+                return String.Empty;
+            }
+        }
+
+
+        /// <summary>
+        /// Gets the 'value' of the 'iat' claim { iat, 'value' } converted to a <see cref="DateTime"/> assuming 'value' is seconds since UnixEpoch (UTC 1970-01-01T0:0:0Z).
+        /// </summary>
+        /// <remarks>If the 'exp' claim is not found, then <see cref="DateTime.MinValue"/> is returned.</remarks>
+        public DateTime IssuedAt
+        {
+            get
+            {
+                if (Payload != null)
+                    return Payload.Value<DateTime?>(JwtRegisteredClaimNames.Iat) ?? DateTime.MinValue;
+                return DateTime.MinValue;
+            }
+        }
+
+        /// <summary>
         /// Gets the 'value' of the 'JWT ID' claim { jti, ''value' }.
         /// </summary>
         /// <remarks>If the 'JWT ID' claim is not found, an empty string is returned.</remarks>
@@ -177,6 +249,20 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
             {
                 if (Payload != null)
                     return Payload.Value<string>(JwtRegisteredClaimNames.Iss) ?? String.Empty;
+                return String.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Gets the 'value' of the 'kid' claim { kid, 'value' }.
+        /// </summary>
+        /// <remarks>If the 'kid' claim is not found, an empty string is returned.</remarks>   
+        public string Kid
+        {
+            get
+            {
+                if (Header != null)
+                    return Header.Value<string>(JwtHeaderParameterNames.Kid) ?? String.Empty;
                 return String.Empty;
             }
         }
@@ -244,6 +330,34 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         }
 
         /// <summary>
+        /// Gets the 'value' of the 'sub' claim { sub, 'value' }.
+        /// </summary>
+        /// <remarks>If the 'sub' claim is not found, an empty string is returned.</remarks>   
+        public string Subject
+        {
+            get
+            {
+                if (Payload != null)
+                    return Payload.Value<string>(JwtRegisteredClaimNames.Sub) ?? String.Empty;
+                return String.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Gets the 'value' of the 'typ' claim { typ, 'value' }.
+        /// </summary>
+        /// <remarks>If the 'typ' claim is not found, an empty string is returned.</remarks>   
+        public string Typ
+        {
+            get
+            {
+                if (Header != null)
+                    return Header.Value<string>(JwtHeaderParameterNames.Typ) ?? String.Empty;
+                return String.Empty;
+            }
+        }
+
+        /// <summary>
         /// Gets the 'value' of the 'notbefore' claim { nbf, 'value' } converted to a <see cref="DateTime"/> assuming 'value' is seconds since UnixEpoch (UTC 1970-01-01T0:0:0Z).
         /// </summary>
         /// <remarks>If the 'notbefore' claim is not found, then <see cref="DateTime.MinValue"/> is returned.</remarks>
@@ -258,9 +372,9 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         }
 
         /// <summary>
-        /// Gets the 'value' of the 'expiration' claim { exp, 'value' } converted to a <see cref="DateTime"/> assuming 'value' is seconds since UnixEpoch (UTC 1970-01-01T0:0:0Z).
+        /// Gets the 'value' of the 'exp' claim { exp, 'value' } converted to a <see cref="DateTime"/> assuming 'value' is seconds since UnixEpoch (UTC 1970-01-01T0:0:0Z).
         /// </summary>
-        /// <remarks>If the 'expiration' claim is not found, then <see cref="DateTime.MinValue"/> is returned.</remarks>
+        /// <remarks>If the 'exp' claim is not found, then <see cref="DateTime.MinValue"/> is returned.</remarks>
         public override DateTime ValidTo
         {
             get
@@ -270,5 +384,20 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
                 return DateTime.MinValue;
             }
         }
+
+        /// <summary>
+        /// Gets the 'value' of the 'x5t' claim { x5t, 'value' }.
+        /// </summary>
+        /// <remarks>If the 'x5t' claim is not found, an empty string is returned.</remarks>   
+        public string X5t
+        {
+            get
+            {
+                if (Header != null)
+                    return Header.Value<string>(JwtHeaderParameterNames.X5t) ?? String.Empty;
+                return String.Empty;
+            }
+        }
+
     }
 }

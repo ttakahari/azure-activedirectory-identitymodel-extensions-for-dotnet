@@ -37,7 +37,7 @@ using TokenLogMessages = Microsoft.IdentityModel.Tokens.LogMessages;
 namespace Microsoft.IdentityModel.Tokens.Jwt
 {
     /// <summary>
-    /// A class which contains useful methods for processing Jwt tokens.
+    /// A class which contains useful methods for processing JWT tokens.
     /// </summary>
     public class JwtTokenUtilities
     {
@@ -73,7 +73,7 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
 
             try
             {
-                LogHelper.LogVerbose(LogMessages.IDX12645);
+                LogHelper.LogVerbose(LogMessages.IDX14200);
                 return Base64UrlEncoder.Encode(await signatureProvider.SignAsync(Encoding.UTF8.GetBytes(input)).ConfigureAwait(false));
             }
             finally

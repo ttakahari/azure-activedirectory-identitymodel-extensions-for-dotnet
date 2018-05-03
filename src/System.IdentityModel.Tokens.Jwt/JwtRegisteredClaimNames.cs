@@ -45,11 +45,6 @@ namespace System.IdentityModel.Tokens.Jwt
         public const string Acr = Microsoft.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Acr;
 
         /// <summary>
-        /// https://tools.ietf.org/html/rfc7515#section-4.1.1
-        /// </summary>
-        public const string Alg = Microsoft.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Alg;
-
-        /// <summary>
         /// http://openid.net/specs/openid-connect-core-1_0.html#IDToken
         /// </summary>
         public const string Amr = Microsoft.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Amr;
@@ -90,11 +85,6 @@ namespace System.IdentityModel.Tokens.Jwt
         public const string Email = Microsoft.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Email;
 
         /// <summary>
-        /// https://tools.ietf.org/html/rfc7516#section-4.1.2
-        /// </summary>
-        public const string Enc = Microsoft.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Enc;
-
-        /// <summary>
         /// http://tools.ietf.org/html/rfc7519#section-4
         /// </summary>
         public const string Exp = Microsoft.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Exp;
@@ -128,11 +118,6 @@ namespace System.IdentityModel.Tokens.Jwt
         /// http://tools.ietf.org/html/rfc7519#section-4
         /// </summary>
         public const string Jti = Microsoft.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti;
-
-        /// <summary>
-        /// https://tools.ietf.org/html/rfc7515#section-4.1.4
-        /// </summary>
-        public const string Kid = Microsoft.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Kid;
 
         /// <summary>
         /// http://tools.ietf.org/html/rfc7519#section-4
@@ -178,10 +163,5 @@ namespace System.IdentityModel.Tokens.Jwt
         /// http://tools.ietf.org/html/rfc7519#section-4
         /// </summary>
         public const string Website = Microsoft.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Website;
-
-        /// <summary>
-        /// https://tools.ietf.org/html/rfc7515#section-4.1.4
-        /// </summary>
-        public const string X5t = Microsoft.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.X5t;
     }
 }

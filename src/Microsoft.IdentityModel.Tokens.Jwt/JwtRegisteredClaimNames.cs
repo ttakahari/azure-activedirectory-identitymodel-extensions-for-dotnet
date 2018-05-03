@@ -45,11 +45,6 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         public const string Acr = "acr";
 
         /// <summary>
-        /// https://tools.ietf.org/html/rfc7515#section-4.1.1
-        /// </summary>
-        public const string Alg = "alg";
-
-        /// <summary>
         /// http://openid.net/specs/openid-connect-core-1_0.html#IDToken
         /// </summary>
         public const string Amr = "amr";
@@ -90,11 +85,6 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         public const string Email = "email";
 
         /// <summary>
-        /// https://tools.ietf.org/html/rfc7516#section-4.1.2
-        /// </summary>
-        public const string Enc = "enc";
-
-        /// <summary>
         /// http://tools.ietf.org/html/rfc7519#section-4
         /// </summary>
         public const string Exp = "exp";
@@ -128,11 +118,6 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         /// http://tools.ietf.org/html/rfc7519#section-4
         /// </summary>
         public const string Jti = "jti";
-
-        /// <summary>
-        /// https://tools.ietf.org/html/rfc7515#section-4.1.4
-        /// </summary>
-        public const string Kid = "kid";
 
         /// <summary>
         /// http://tools.ietf.org/html/rfc7519#section-4
@@ -178,10 +163,5 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
         /// http://tools.ietf.org/html/rfc7519#section-4
         /// </summary>
         public const string Website = "website";
-
-        /// <summary>
-        /// https://tools.ietf.org/html/rfc7515#section-4.1.4
-        /// </summary>
-        public const string X5t = "x5t";
     }
 }
