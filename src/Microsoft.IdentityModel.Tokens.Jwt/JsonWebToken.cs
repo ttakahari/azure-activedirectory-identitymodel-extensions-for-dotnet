@@ -27,6 +27,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
+using System.Xml;
 using Microsoft.IdentityModel.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -193,6 +195,132 @@ namespace Microsoft.IdentityModel.Tokens.Jwt
                     return Payload.Value<List<string>>(JwtRegisteredClaimNames.Aud) ?? new List<string>();
                 return new List<string>();
             }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="IEnumerable{Claim}"/><see cref="Claim"/> for each JSON { name, value }.
+        /// </summary>
+        public virtual IEnumerable<Claim> Claims
+        {
+            get
+            {
+                List<Claim> claims = new List<Claim>();
+                string issuer = this.Issuer ?? ClaimsIdentity.DefaultIssuer;
+
+                // there is some code redundancy here that was not factored as this is a high use method. Each identity received from the host will pass through here.
+                foreach (var jProperty in Payload)
+                {
+                    if (jProperty.Value == null)
+                    {
+                        claims.Add(new Claim(jProperty.Key, string.Empty, JsonClaimValueTypes.JsonNull, issuer, issuer));
+                        continue;
+                    }
+
+                    var claimValue = jProperty.Value.ToObject<string>();
+                    if (jProperty.Value.Type.Equals(typeof(string)))
+                    {
+                        claims.Add(new Claim(jProperty.Key, claimValue, ClaimValueTypes.String, issuer, issuer));
+                        continue;
+                    }
+
+                    var jtoken = jProperty.Value;
+                    if (jtoken != null)
+                    {
+                        AddClaimsFromJToken(claims, jProperty.Key, jtoken, issuer);
+                        continue;
+                    }
+
+                }
+
+                return claims;
+            }
+        }
+
+        private void AddClaimsFromJToken(List<Claim> claims, string claimType, JToken jtoken, string issuer)
+        {
+            if (jtoken.Type == JTokenType.Object)
+            {
+                claims.Add(new Claim(claimType, jtoken.ToString(Newtonsoft.Json.Formatting.None), JsonClaimValueTypes.Json, issuer, issuer));
+            }
+            else if (jtoken.Type == JTokenType.Array)
+            {
+                var jarray = jtoken as JArray;
+                foreach (var item in jarray)
+                {
+                    switch (item.Type)
+                    {
+                        case JTokenType.Object:
+                            claims.Add(new Claim(claimType, item.ToString(Newtonsoft.Json.Formatting.None), JsonClaimValueTypes.Json, issuer, issuer));
+                            break;
+
+                        // only go one level deep on arrays.
+                        case JTokenType.Array:
+                            claims.Add(new Claim(claimType, item.ToString(Newtonsoft.Json.Formatting.None), JsonClaimValueTypes.JsonArray, issuer, issuer));
+                            break;
+
+                        default:
+                            AddDefaultClaimFromJToken(claims, claimType, item, issuer);
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                AddDefaultClaimFromJToken(claims, claimType, jtoken, issuer);
+            }
+        }
+
+        private void AddDefaultClaimFromJToken(List<Claim> claims, string claimType, JToken jtoken, string issuer)
+        {
+            JValue jvalue = jtoken as JValue;
+            if (jvalue != null)
+            {
+                // String is special because item.ToString(Formatting.None) will result in "/"string/"". The quotes will be added.
+                // Boolean needs item.ToString otherwise 'true' => 'True'
+                if (jvalue.Type == JTokenType.String)
+                    claims.Add(new Claim(claimType, jvalue.Value.ToString(), ClaimValueTypes.String, issuer, issuer));
+                else
+                    claims.Add(new Claim(claimType, jtoken.ToString(Newtonsoft.Json.Formatting.None), GetClaimValueType(jvalue.Value), issuer, issuer));
+            }
+            else
+                claims.Add(new Claim(claimType, jtoken.ToString(Newtonsoft.Json.Formatting.None), GetClaimValueType(jtoken), issuer, issuer));
+        }
+
+        internal static string GetClaimValueType(object obj)
+        {
+            if (obj == null)
+                return JsonClaimValueTypes.JsonNull;
+
+            var objType = obj.GetType();
+
+            if (objType == typeof(string))
+                return ClaimValueTypes.String;
+
+            if (objType == typeof(int))
+                return ClaimValueTypes.Integer;
+
+            if (objType == typeof(bool))
+                return ClaimValueTypes.Boolean;
+
+            if (objType == typeof(double))
+                return ClaimValueTypes.Double;
+
+            if (objType == typeof(long))
+            {
+                long l = (long)obj;
+                if (l >= int.MinValue && l <= int.MaxValue)
+                    return ClaimValueTypes.Integer;
+
+                return ClaimValueTypes.Integer64;
+            }
+
+            if (objType == typeof(JObject))
+                return JsonClaimValueTypes.Json;
+
+            if (objType == typeof(JArray))
+                return JsonClaimValueTypes.JsonArray;
+
+            return objType.ToString();
         }
 
         /// <summary>
